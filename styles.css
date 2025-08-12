@@ -1,0 +1,136 @@
+:root{
+  --bg:#0f1115; --panel:#171a21; --muted:#2a2f3a; --accent:#8bd3ff; --accent-2:#b9fbc0;
+  --text:#e8ecf1; --sub:#b8c1d1; --danger:#ff6b6b; --gold:#ffd166; --ok:#95ff8f;
+  --bg-light:#f4f6fb; --panel-light:#ffffff; --muted-light:#d7dde7; --text-light:#0e1520; --sub-light:#415168;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:linear-gradient(180deg,#0c0f14,#11151c 40%,#0c0f14);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;font-size:16px}
+body.light{background:linear-gradient(180deg,#eef2f9,#e7ecf6 40%,#eef2f9);color:var(--text-light)}
+#app{min-height:100dvh;display:flex;flex-direction:column}
+.is-hidden{display:none !important}
+
+header{padding:10px 14px;border-bottom:1px solid var(--muted);background:rgba(23,26,33,.8);backdrop-filter:blur(6px);position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px}
+body.light header{border-color:var(--muted-light);background:rgba(255,255,255,.7)}
+header h1{font-size:18px;margin:0;letter-spacing:.5px}
+header .spacer{flex:1}
+header .btn{padding:6px 10px}
+
+main{flex:1;display:grid;grid-template-rows:auto 1fr auto;max-width:980px;width:100%;margin:0 auto;padding:10px;gap:10px}
+
+.panel{background:rgba(23,26,33,.9);border:1px solid var(--muted);border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.3)}
+body.light .panel{background:rgba(255,255,255,.9);border-color:var(--muted-light);box-shadow:0 10px 24px rgba(0,0,0,.08)}
+.flex{display:flex;gap:10px}
+.row{display:flex;gap:10px;align-items:center}
+.col{display:flex;flex-direction:column;gap:10px}
+
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;padding:8px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;padding:10px}
+
+.btn{appearance:none;border:1px solid var(--muted);background:#11151c;color:var(--text);padding:10px 12px;border-radius:12px;cursor:pointer;transition:.15s;touch-action:manipulation}
+.btn:hover{border-color:var(--accent);box-shadow:0 0 0 2px rgba(139,211,255,.15) inset}
+.btn.primary{background:linear-gradient(180deg,#1b2330,#141b26);border-color:#2d3746}
+.btn.good{border-color:transparent;background:linear-gradient(180deg,#16301e,#0f2014)}
+.btn.warn{border-color:transparent;background:linear-gradient(180deg,#351b1b,#1d0f0f)}
+.btn.ghost{background:transparent}
+.btn.small{padding:6px 8px;border-radius:10px}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+body.light .btn{background:#fff;color:var(--text-light);border-color:var(--muted-light)}
+body.light .btn.primary{background:linear-gradient(180deg,#ffffff,#f4f7fb)}
+
+.grid{display:grid;gap:10px}
+.grid.cols-2{grid-template-columns:1fr 1fr}
+.grid.cols-3{grid-template-columns:repeat(3,1fr)}
+.grid.cols-4{grid-template-columns:repeat(4,1fr)}
+@media (max-width:900px){.grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr}}
+
+.section{padding:12px}
+.section h2{margin:0 0 6px 0;font-size:16px;color:var(--accent)}
+body.light .section h2{color:#3a6cb9}
+.section h3{margin:0 0 6px 0;font-size:14px;color:var(--accent-2)}
+.section p{margin:0 0 6px 0;color:var(--sub)}
+body.light .section p{color:var(--sub-light)}
+.tag{opacity:.85}
+
+.stat{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--muted);border-radius:10px;background:#0f131a}
+body.light .stat{background:#f9fbff;border-color:var(--muted-light)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--muted);border-radius:999px}
+body.light .pill{border-color:var(--muted-light)}
+
+input,select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--muted);background:#0d1117;color:var(--text)}
+input[type=number]{appearance:textfield}
+body.light input, body.light select{background:#fff;border-color:var(--muted-light);color:var(--text-light)}
+
+.log{padding:10px;height:190px;overflow:auto;border-top:1px solid var(--muted);background:linear-gradient(180deg,#0e131a,#0b0e12)}
+.log p{margin:.4em 0}
+body.light .log{background:#f3f6fb;border-color:var(--muted-light)}
+
+.choice-list{display:flex;flex-direction:column;gap:8px;padding:8px}
+
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--muted),transparent)}
+body.light .divider{background:linear-gradient(90deg,transparent,var(--muted-light),transparent)}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;background:#0d1319;border:1px solid var(--muted);padding:10px 14px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.4);z-index:50}
+body.light .toast{background:#ffffff;border-color:var(--muted-light);color:var(--text-light)}
+
+.xp-bar{height:10px;border-radius:8px;border:1px solid var(--muted);background:#0f141b;overflow:hidden}
+.xp-bar > div{height:100%;background:linear-gradient(90deg,#2f6cff,#6df2ff)}
+body.light .xp-bar{background:#eef2fb;border-color:var(--muted-light)}
+
+.avatar{font-size:28px}
+.em{filter:drop-shadow(0 2px 0 rgba(0,0,0,.3))}
+
+footer{opacity:.8;padding:8px;text-align:center;font-size:12px}
+
+.screen{display:none}
+.screen.active{display:block}
+
+/* Start Overlay */
+#start-overlay{
+  position:fixed; inset:0; background:linear-gradient(180deg,#0b0e13cc,#0b0e13e6);
+  display:flex; align-items:center; justify-content:center; z-index:1000;
+}
+body.light #start-overlay{background:linear-gradient(180deg,#e9eef7cc,#e9eef7f0)}
+#start-card{
+  width:min(640px,92vw);
+  border-radius:18px; border:1px solid var(--muted); background:rgba(23,26,33,.95);
+  box-shadow:0 20px 48px rgba(0,0,0,.5); padding:18px;
+}
+body.light #start-card{background:#ffffff;border-color:var(--muted-light);box-shadow:0 20px 48px rgba(0,0,0,.08)}
+#start-card h1{margin:0 0 8px 0; font-size:22px}
+#start-card p{margin:0 0 10px 0; color:var(--sub)}
+
+/* --- Combat HP bars & active highlight --- */
+.hpbar{
+  height:8px; border-radius:6px; overflow:hidden;
+  border:1px solid var(--muted);
+  background: linear-gradient(180deg,#0f141b,#0b0e12);
+  margin-top:4px;
+}
+.hpbar > div{
+  height:100%;
+  background: linear-gradient(90deg,#2ecc71,#f1c40f,#e74c3c);
+}
+
+#combat-party .stat.active-turn,
+#combat-enemies .stat.active-turn{
+  box-shadow: 0 0 0 2px rgba(139,211,255,.25) inset, 0 0 14px rgba(109,242,255,.2);
+  border-color: var(--accent);
+}
+
+/* --- Pre-battle overlay --- */
+.overlay{
+  position:fixed; inset:0;
+  background:linear-gradient(180deg,#0b0e13cc,#0b0e13e6);
+  display:flex; align-items:center; justify-content:center; z-index:1000;
+}
+body.light .overlay{ background:linear-gradient(180deg,#e9eef7cc,#e9eef7f0); }
+.overlay.is-hidden{ display:none; }
+.overlay-card{
+  width:min(620px,92vw);
+  border-radius:16px; border:1px solid var(--muted);
+  background:rgba(23,26,33,.96);
+  box-shadow:0 20px 48px rgba(0,0,0,.5);
+  padding:16px;
+}
+body.light .overlay-card{ background:#ffffff; border-color:var(--muted-light); box-shadow:0 20px 48px rgba(0,0,0,.08); }
+.overlay-card h2{ margin:0 0 8px 0; font-size:20px; }

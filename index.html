@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Echoes and Embers – RPG (Vertical Slice)</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<div id="app">
+  <header class="row">
+    <div class="avatar">🗡️✨</div>
+    <h1>Echoes and Embers</h1>
+    <div class="spacer"></div>
+
+    <!-- Only Save/Load/Reset remain in the header -->
+    <button class="btn small" id="btnSave">Save</button>
+    <button class="btn small" id="btnLoad">Load</button>
+    <button class="btn small" id="btnReset">Reset</button>
+  </header>
+
+  <!-- Start Menu Overlay -->
+  <div id="start-overlay" class="is-hidden" aria-hidden="true" role="dialog" aria-label="Start Menu">
+    <div id="start-card">
+      <h1>Echoes and Embers</h1>
+      <p>Lightweight, text-first fantasy RPG. Create a party, talk to NPCs, and tackle the Hollowroot quest.</p>
+      <div class="choice-list">
+        <button class="btn primary" id="btnNewGame">🌟 New Game</button>
+        <button class="btn" id="btnContinue">▶ Continue</button>
+      </div>
+      <div class="divider" style="margin:10px 0"></div>
+      <div class="row">
+        <span class="pill">Tip: Use <b>Save/Load</b> in the header anytime.</span>
+        <div class="spacer"></div>
+        <button class="btn small" id="btnCloseStart">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pre-Battle Preview Overlay -->
+  <div id="prebattle-overlay" class="overlay is-hidden" aria-hidden="true" role="dialog" aria-label="Battle Preview">
+    <div class="overlay-card">
+      <h2>Battle Preview</h2>
+      <div id="pb-enemies" class="col" style="margin:8px 0"></div>
+      <div class="row" style="gap:8px;flex-wrap:wrap">
+        <div class="pill">Reward: <b id="pb-gold">5–12</b> gold</div>
+        <div class="pill">XP: <b id="pb-xp">30–60</b></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn primary" id="pb-start">Start Battle</button>
+        <button class="btn" id="pb-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW: Post-Battle Summary Overlay -->
+  <div id="postbattle-overlay" class="overlay is-hidden" aria-hidden="true" role="dialog" aria-label="Battle Summary">
+    <div class="overlay-card">
+      <h2>Victory</h2>
+      <div id="post-summary" class="col" style="max-height:50vh; overflow:auto; margin:8px 0"></div>
+      <div class="row" style="gap:8px;flex-wrap:wrap">
+        <div class="pill">Gold: <b id="sum-gold">0</b></div>
+        <div class="pill">XP: <b id="sum-xp">0</b></div>
+        <div class="pill" id="sum-items">Items: —</div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn primary" id="post-finish">Finish</button>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <div class="tabs panel" id="tabbar"></div>
+
+    <div id="screen-container" class="col">
+      <!-- Main Menu -->
+      <section id="screen-menu" class="screen active panel section">
+        <h2>Welcome, traveler.</h2>
+        <p class="tag">Create your party (up to 4), meet an NPC, and take on your first quest in the Vale.</p>
+        <div class="choice-list">
+          <button class="btn primary" onclick="UI.goto('create')">🧙 Create / Manage Party</button>
+          <button class="btn" onclick="UI.goto('town')">🏘️ Enter Thornbridge (Town)</button>
+        </div>
+      </section>
+
+      <!-- Party Creator -->
+      <section id="screen-create" class="screen panel section">
+        <h2>Party</h2>
+        <div class="grid cols-2">
+          <div class="col">
+            <h3>Create a Character</h3>
+            <div class="grid cols-2">
+              <label>Name<input id="cc-name" placeholder="Arin, Lira, ..."></label>
+              <label>Race<select id="cc-race"></select></label>
+              <label>Class<select id="cc-class"></select></label>
+              <label>Background<input id="cc-bg" placeholder="(optional)"></label>
+            </div>
+            <div class="divider"></div>
+            <h3>Allocate Stats (27 points)</h3>
+            <div id="cc-stats" class="grid cols-3"></div>
+            <div class="row">
+              <span class="pill"><strong>Points</strong> <span id="cc-points">27</span></span>
+              <div class="spacer"></div>
+              <button class="btn good" id="cc-add">Add to Party</button>
+              <button class="btn" id="cc-new">Create a New Character</button>
+            </div>
+            <p class="tag">Race bonuses apply on creation. Tap a stat to adjust.</p>
+          </div>
+          <div class="col">
+            <h3>Current Party <span class="tag" id="party-count">0 / 4</span></h3>
+            <div id="party-list" class="col"></div>
+            <div class="row">
+              <button class="btn" onclick="UI.goto('menu')">⬅ Back</button>
+              <div class="spacer"></div>
+              <button class="btn primary" onclick="UI.goto('town')">Enter Town</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Town -->
+      <section id="screen-town" class="screen panel section">
+        <h2>Thornbridge</h2>
+        <p class="tag">A quiet frontier village at the edge of the Hollow Vale. Smoke curls from thatch roofs; wary eyes watch the woods.</p>
+        <div class="choice-list">
+          <button class="btn" onclick="Scenes.townSquare()">🏛️ Town Square</button>
+          <button class="btn" onclick="Scenes.inn()">🍺 The Fir & Finch Inn</button>
+          <button class="btn" onclick="Scenes.market()">🧺 Market Stalls</button>
+          <button class="btn" onclick="Scenes.gate()">🌲 Vale Gate (Wilderness)</button>
+          <button class="btn warn" onclick="Scenes.caveEntrance()">🕳️ Hollowroot Cave</button>
+          <button class="btn" onclick="UI.goto('menu')">⬅ Main Menu</button>
+        </div>
+        <div id="town-output" class="log panel"></div>
+      </section>
+
+      <!-- Dialogue -->
+      <section id="screen-dialogue" class="screen panel section">
+        <div class="row" style="justify-content:space-between;align-items:center;gap:8px">
+          <h2 id="dlg-name">NPC</h2>
+          <button class="btn small" onclick="UI.backFromDialogue()">Done</button>
+        </div>
+        <div id="dlg-text" class="section" style="min-height:90px"></div>
+        <div id="dlg-choices" class="choice-list"></div>
+      </section>
+
+      <!-- Combat -->
+      <section id="screen-combat" class="screen panel section">
+        <div class="row" style="align-items:center;gap:10px">
+          <h2>⚔️ Battle</h2>
+          <div class="pill" id="turn-indicator" title="Current turn" style="margin-left:6px">—</div>
+          <div class="pill" id="round-tracker" title="Round / Turn" style="margin-left:6px">—</div>
+          <div class="spacer"></div>
+          <button class="btn small" onclick="Combat.tryFlee()">🏃 Attempt Flee</button>
+        </div>
+        <div class="grid cols-2">
+          <div class="col">
+            <h3>Party</h3>
+            <div id="combat-party" class="col"></div>
+          </div>
+          <div class="col">
+            <h3>Enemies</h3>
+            <div id="combat-enemies" class="col"></div>
+          </div>
+        </div>
+        <div class="divider" style="margin-top:6px"></div>
+        <div class="toolbar" id="combat-actions"></div>
+        <div id="combat-log" class="log"></div>
+      </section>
+
+      <!-- Character Sheets -->
+      <section id="screen-sheet" class="screen panel section">
+        <h2>Character Sheet</h2>
+        <div id="sheet-list" class="col"></div>
+        <div class="row">
+          <button class="btn" onclick="UI.goto('menu')">⬅ Back</button>
+        </div>
+      </section>
+
+      <!-- Inventory -->
+      <section id="screen-inventory" class="screen panel section">
+        <h2>Inventory</h2>
+        <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:6px">
+          <div class="pill">💰 <b id="inv-gold">0</b> gold</div>
+          <div class="pill">🎒 <span id="inv-count">0</span> items</div>
+        </div>
+        <div id="inv-list" class="col"></div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" onclick="UI.goto('menu')">⬅ Back</button>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section id="screen-settings" class="screen panel section">
+        <h2>Settings</h2>
+        <div class="grid cols-2">
+          <div class="col">
+            <h3>Accessibility</h3>
+            <label>Text Size
+              <select id="set-textsize">
+                <option value="14">Small</option>
+                <option value="16" selected>Default</option>
+                <option value="18">Large</option>
+                <option value="20">Extra Large</option>
+              </select>
+            </label>
+            <label class="row"><input type="checkbox" id="set-reduced"> Reduce Motion</label>
+          </div>
+          <div class="col">
+            <h3>Audio</h3>
+            <label class="row"><input type="checkbox" id="set-mute"> Mute Sounds</label>
+            <p class="tag">The current build has minimal SFX, but this toggle is saved for future updates.</p>
+            <h3>Appearance</h3>
+            <label>Theme
+              <select id="set-theme">
+                <option value="dark" selected>Dark</option>
+                <option value="light">Light</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div class="divider" style="margin:8px 0"></div>
+        <div class="row">
+          <button class="btn primary" id="set-save">Save Settings</button>
+          <button class="btn" id="set-reset">Reset to Defaults</button>
+          <div class="spacer"></div>
+          <button class="btn" onclick="UI.goto('menu')">⬅ Back</button>
+        </div>
+      </section>
+
+    </div>
+
+    <footer class="panel">
+      Built as a single-file vertical slice. ❄️ Save/Load uses localStorage.
+    </footer>
+  </main>
+</div>
+
+<script type="module" src="./main.js"></script>
+</body>
+</html>
