@@ -2,6 +2,8 @@ import { DB } from './db.js';
 import { Utils, calcMod, baseStats } from './utils.js';
 import { State, Notifier } from './state.js';
 
+
+
 export function createCharacter({name,race,clazz,bg,stats}){
   const cls = DB.classes[clazz];
   const rc = DB.races[race];
@@ -70,3 +72,4 @@ export function addGold(n){
 }
 
 export { baseStats, calcMod };
+
