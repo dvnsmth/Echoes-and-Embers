@@ -3,10 +3,11 @@ import { DB } from './db.js';
 import { Utils, calcMod } from './utils.js';
 import { addGold, grantXP } from './character.js';
 import { Storage } from './storage.js';
+import { AudioManager } from './audio.js';
 
 function actionBtn(label, on){
   const b=document.createElement('button');
-  b.className='btn'; b.textContent=label; b.onclick=on;
+  b.className='btn'; b.textContent=label; b.onclick=()=>{ try{ AudioManager.play('select'); }catch{}; on(); };
   return b;
 }
 function nameOf(x){ return x.meta? x.name : x.name; }
@@ -179,6 +180,7 @@ export const Combat = {
         const heal=6;
         ch.hp=Math.min(ch.maxHP,ch.hp+heal);
         State.inventory['Minor Tonic']--;
+        try{ AudioManager.play('heal'); }catch{}
         this._bumpHeal(ch.id, ch.id, heal); // self heal tracked as given+received
         this.log(`${ch.name} uses a tonic (+${heal} HP).`);
         this.render();
@@ -300,7 +302,9 @@ export const Combat = {
         if(roll>=def){
           const dmg=this.damage(ch,2);
           en.hp=Math.max(0,en.hp-dmg);
-          this._bumpDamage(ch.id, null, 0); // keep structure (optional)
+          
+          try{ AudioManager.play('hit'); }catch{}
+this._bumpDamage(ch.id, null, 0); // keep structure (optional)
           this._bumpDamage(ch.id, null, 0);
           this._bumpDamage(ch.id, undefined, 0);
           this._bumpDamage(ch.id, (en.meta?en.id:null), dmg); // enemy wont be counted; safe
@@ -389,7 +393,9 @@ export const Combat = {
     if(roll+atkBonus>=def){
       const dmg=this.damage(en);
       tgt.hp=Math.max(0,tgt.hp-dmg);
-      this._bumpDamage(null, tgt.id, dmg); // enemy dealt to ally
+      
+      try{ AudioManager.play('hit'); }catch{}
+this._bumpDamage(null, tgt.id, dmg); // enemy dealt to ally
       this.log(`${en.name} hits ${tgt.name} for ${dmg}.`);
     } else {
       this.log(`${en.name} misses ${tgt.name}.`);
@@ -411,6 +417,7 @@ export const Combat = {
     if(allies.length===0){
       this.log('Your party falls…');
       Notifier.toast('Defeat.');
+      try{ AudioManager.play('defeat'); }catch{}
       this.active=null;
       Storage.save();
       return;
@@ -431,6 +438,7 @@ export const Combat = {
       this._lastRewards = {xp, gold, loot};
 
       // Show summary overlay (no auto-redirect)
+      try{ AudioManager.play('victory'); }catch{}
       this.showPostBattleSummary();
 
       return;

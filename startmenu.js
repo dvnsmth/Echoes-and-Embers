@@ -1,3 +1,4 @@
+import { AudioManager } from './audio.js';
 import { State } from './state.js';
 import { Storage } from './storage.js';
 import { createCharacter } from './character.js';
@@ -13,18 +14,18 @@ export const StartMenu = {
       const t = e.target;
       if(!(t instanceof HTMLElement)) return;
 
-      if (t.id === 'btnNewGame') {
+      if (t.id === 'btnNewGame') { try{ AudioManager.play('select'); }catch{};
         localStorage.removeItem('hollowvale-save');
         Object.assign(State,{party:[],gold:20,inventory:{},quests:{},flags:{}});
         UI.refreshParty(); UI.refreshSheet();
         this.hide();
         UI.goto('create');
       }
-      if (t.id === 'btnContinue') {
+      if (t.id === 'btnContinue') { try{ AudioManager.play('select'); }catch{};
         if(Storage.hasSave()){ Storage.load(); this.hide(); UI.goto('menu'); }
         else { UI.toast('No save found. Start a new game.'); }
       }
-      if (t.id === 'btnCloseStart') {
+      if (t.id === 'btnCloseStart') { try{ AudioManager.play('select'); }catch{};
         this.hide();
       }
       // Quick Start and Help removed
