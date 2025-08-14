@@ -1,3 +1,4 @@
+import { AudioManager } from './audio.js';
 import { State, Notifier } from './state.js';
 import { calcMod } from './character.js';
 
@@ -15,6 +16,7 @@ export const Sheet = {
     ch.equips.weapon = {name:"Steel Blade", dmg:[1,8], bonus:1};
     ch.equips.armor = {name:"Leather", ac:1};
     ch.meta.armor = 10 + calcMod(ch.stats.DEX) + 1;
+    try{ AudioManager.play('select'); }catch{}
     Notifier.toast(`${ch.name} equips better gear.`); Notifier.refresh();
   }
 };
