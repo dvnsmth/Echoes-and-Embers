@@ -53,7 +53,7 @@
     </div>
   </div>
 
-  <!-- NEW: Post-Battle Summary Overlay -->
+  <!-- Post-Battle Summary Overlay -->
   <div id="postbattle-overlay" class="overlay is-hidden" aria-hidden="true" role="dialog" aria-label="Battle Summary">
     <div class="overlay-card">
       <h2>Victory</h2>
@@ -207,8 +207,21 @@
           </div>
           <div class="col">
             <h3>Audio</h3>
-            <label class="row"><input type="checkbox" id="set-mute"> Mute Sounds</label>
-            <p class="tag">The current build has minimal SFX, but this toggle is saved for future updates.</p>
+
+            <!-- ✅ Working music controls -->
+            <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">
+              <button class="btn small" id="music-toggle" type="button">Music: On</button>
+              <label class="row" style="gap:6px;align-items:center">
+                Music Volume
+                <input id="bgm-volume" type="range" min="0" max="1" step="0.05" value="0.7" style="width:180px">
+              </label>
+            </div>
+
+            <!-- (kept) Legacy mute checkbox; now wired to the same system -->
+            <label class="row"><input type="checkbox" id="set-mute"> Mute Sounds (legacy)</label>
+
+            <p class="tag">SFX slider below controls sound effects only.</p>
+
             <h3>Appearance</h3>
             <label>Theme
               <select id="set-theme">
@@ -235,6 +248,151 @@
   </main>
 </div>
 
+<!-- Load the media manager as a plain script -->
+<script src="./scripts/location_media.js"></script>
+<!-- BEGIN: Inline Media Manager (no external path required) -->
+<script>
+(function(){
+  if (window.__LocationMediaInstalled) return;
+  window.__LocationMediaInstalled = true;
+
+  // ===== YOUR MEDIA MAP (PNG backgrounds, MP3 music) =====
+  window.LOCATION_MEDIA = {
+    "Start": {
+      image: "Assets/Backgrounds/start.png",
+      music: ["Assets/Music/start song.mp3"]
+    },
+    "CreateParty": {
+      image: "Assets/Backgrounds/start.png",
+      music: ["Assets/Music/start song.mp3"]
+    },
+    "Town Square": {
+      image: "Assets/Backgrounds/town_square.png",
+      music: ["Assets/Music/town square.mp3"]
+    },
+    "Inn": {
+      image: "Assets/Backgrounds/inn.png",
+      music: ["Assets/Music/inn fire.mp3","Assets/Music/inn noise.mp3"]
+    },
+    "Market": {
+      image: "Assets/Backgrounds/market.png",
+      music: ["Assets/Music/market noise.mp3","Assets/Music/market song.mp3"]
+    },
+    "Wilderness": {
+      image: "Assets/Backgrounds/wilderness.png",
+      music: ["Assets/Music/wilderness.mp3","Assets/Music/woods.mp3"]
+    },
+    "Cave Entrance": {
+      image: "Assets/Backgrounds/cave.png",
+      music: ["Assets/Music/cave music.mp3","Assets/Music/cave ambience.mp3"]
+    },
+    "Settings": {
+      image: "Assets/Backgrounds/edda.png",
+      music: ["Assets/Music/ourlordisnotready.mp3"]
+    }
+  };
+
+  // ===== helpers =====
+  function ensureBgLayer(){
+    let layer = document.getElementById('bg-layer');
+    if (!layer){
+      layer = document.createElement('div');
+      layer.id = 'bg-layer';
+      Object.assign(layer.style, {
+        position:'fixed', inset:'0', zIndex:'-1',
+        backgroundSize:'cover', backgroundPosition:'center',
+        transition:'opacity 300ms ease', opacity:'1'
+      });
+      document.body.prepend(layer);
+    }
+    return layer;
+  }
+
+  function hardStopAllAudioElements(){
+    document.querySelectorAll('audio').forEach(a => {
+      try { a.pause(); } catch {}
+      try { a.src = ''; a.removeAttribute('src'); a.load?.(); } catch {}
+      try { a.remove(); } catch {}
+    });
+    if (window.__bgmTracks) {
+      window.__bgmTracks.forEach(a => { try{ a.pause(); a.src=''; a.remove(); }catch{} });
+    }
+    window.__bgmTracks = [];
+  }
+
+  function currentVolume(){
+    const v = parseFloat(localStorage.getItem('bgmVolume') || '0.7');
+    return isNaN(v) ? 0.7 : Math.max(0, Math.min(1, v));
+  }
+  function currentMuted(){
+    return localStorage.getItem('bgmMuted') === 'true';
+  }
+
+  function installAutoplayUnblocker(){
+    if (window.__mediaAutoplayUnblockerInstalled) return;
+    window.__mediaAutoplayUnblockerInstalled = true;
+    const resume = () => (window.__bgmTracks||[]).forEach(a => a.play().catch(()=>{}));
+    ['pointerdown','keydown'].forEach(ev =>
+      document.addEventListener(ev, resume, { once:true, passive:true })
+    );
+  }
+
+  function setBgm(sources){
+    hardStopAllAudioElements();
+    const list = Array.isArray(sources) ? sources : (sources ? [sources] : []);
+    window.__bgmTracks = [];
+    if (!list.length){ console.log('[media] setBgm: no sources'); return; }
+    installAutoplayUnblocker();
+
+    list.forEach(src => {
+      const safe = encodeURI(src);
+      const a = new Audio(safe);
+      a.loop = true;
+      a.preload = 'auto';
+      a.muted = currentMuted();
+      a.volume = currentVolume();
+      a.addEventListener('error', () => console.log('[media] audio error:', safe));
+      document.body.appendChild(a);
+      window.__bgmTracks.push(a);
+      a.play().catch(() => console.log('[media] autoplay blocked; will resume on first interaction:', safe));
+    });
+  }
+
+  // ===== public API =====
+  window.MediaManager = {
+    setLocation(key){
+      const m = window.LOCATION_MEDIA[key];
+      if (!m){ console.warn('[media] no mapping for', key); return; }
+      const layer = ensureBgLayer();
+      layer.style.opacity = '0';
+      const img = m.image ? `url('${encodeURI(m.image)}')` : '';
+      setTimeout(() => { layer.style.backgroundImage = img; layer.style.opacity = '1'; }, 60);
+      setBgm(m.music);
+      localStorage.setItem('lastLocation', key);
+    },
+    setInitialMusic(srcOrList){
+      if (localStorage.getItem('bgmMuted') == null) localStorage.setItem('bgmMuted','false');
+      if (localStorage.getItem('bgmVolume') == null) localStorage.setItem('bgmVolume','0.7');
+      setBgm(srcOrList || ["Assets/Music/start song.mp3"]);
+    },
+    mute(flag){
+      localStorage.setItem('bgmMuted', String(!!flag));
+      (window.__bgmTracks||[]).forEach(a => a.muted = !!flag);
+    },
+    setVolume(v){
+      const vol = Math.max(0, Math.min(1, Number(v)));
+      localStorage.setItem('bgmVolume', String(vol));
+      (window.__bgmTracks||[]).forEach(a => a.volume = vol);
+    },
+    stop(){ hardStopAllAudioElements(); }
+  };
+  window.setLocationMedia = window.MediaManager.setLocation;
+})();
+</script>
+<!-- END: Inline Media Manager -->
+
+<!-- Then load your app as a module -->
 <script type="module" src="./main.js"></script>
 </body>
 </html>
+

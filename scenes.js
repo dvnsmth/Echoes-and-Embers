@@ -47,7 +47,6 @@ function panelLog(line, withBack = false){
   return out;
 }
 
-
 function actionsEl(){ return document.getElementById('town-actions'); }
 function log(out, text){ const p=document.createElement('p'); p.innerHTML=text; out.appendChild(p); out.scrollTop = out.scrollHeight; }
 
@@ -66,6 +65,9 @@ function completeQuest(id, peaceful=false){
 
 export const Scenes = {
   townSquare(){
+    // 🔊🎨 Update background + music for Town Square
+    try { setLocationMedia && setLocationMedia('Town Square'); } catch(e){}
+
     const out = panelLog(
       'You stand before the notice board. A ranger, <b>Edda Greenbriar</b> (🧭), watches the treeline. She motions you over.'
     );
@@ -75,6 +77,9 @@ export const Scenes = {
   },
 
   inn(){
+    // 🔊🎨 Inn ambience + art (fire + chatter)
+    try { setLocationMedia && setLocationMedia('Inn'); } catch(e){}
+
     const out = panelLog('The inn hums with low talk. The keeper, <b>Merren</b>, polishes a mug and nods.', true);
     const acts = actionsEl();
     acts.appendChild(btn('Ask for rumors',()=>log(out,'Merren: “Bandits avoid the cave lately. Says the goblins parley with a masked one.”')));
@@ -92,6 +97,9 @@ export const Scenes = {
   },
 
   market(){
+    // 🔊🎨 Market ambience + music (layered)
+    try { setLocationMedia && setLocationMedia('Market'); } catch(e){}
+
     panelLog('Stalls offer herbs and ironmongery. A traveling tinker smiles.', true);
     const acts = actionsEl();
     acts.appendChild(btn('Buy Minor Tonic (5g)',()=>{ if(State.gold<5) return Notifier.toast('Not enough gold'); State.gold-=5; addItem('Minor Tonic',1); Storage.save();}));
@@ -99,6 +107,10 @@ export const Scenes = {
   },
 
   gate(){
+    // 🔊🎨 Wilderness ambience + music (layered)
+    // NOTE: Keeping function name `gate()` for the button wiring, but media maps to "Wilderness".
+    try { setLocationMedia && setLocationMedia('Wilderness'); } catch(e){}
+
     const out = panelLog('Beyond the gate, deer paths lead into the pine-dark.', true);
     const acts = actionsEl();
     acts.appendChild(btn('Forage (chance for item)',()=>{
@@ -112,6 +124,9 @@ export const Scenes = {
   },
 
   caveEntrance(){
+    // 🔊🎨 Cave ambience + music (layered)
+    try { setLocationMedia && setLocationMedia('Cave Entrance'); } catch(e){}
+
     panelLog('A root-torn cleft yawns in the hill. Drips echo. Torch-scars mark the stone.', true);
     const acts = actionsEl();
     acts.appendChild(btn('Enter the cave (quest)',()=>{
