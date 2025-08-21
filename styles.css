@@ -134,3 +134,36 @@ body.light .overlay{ background:linear-gradient(180deg,#e9eef7cc,#e9eef7f0); }
 }
 body.light .overlay-card{ background:#ffffff; border-color:var(--muted-light); box-shadow:0 20px 48px rgba(0,0,0,.08); }
 .overlay-card h2{ margin:0 0 8px 0; font-size:20px; }
+
+/* ===== NEW: Hero image under tabs ===== */
+.hero {
+  height: 260px;
+  border-radius: 16px;
+  background-size: contain;   /* show the full image */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #000;     /* optional: fill behind */
+  overflow: hidden;
+  transition: opacity 300ms ease;
+  
+  /* Hide the hero when there’s no image */
+#location-hero.collapsed{
+  height: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+}
+
+
+/* Start image styling */
+.start-img {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin: 10px 0;
+  display: block;
+}

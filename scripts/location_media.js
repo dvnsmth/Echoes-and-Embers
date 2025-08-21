@@ -1,56 +1,24 @@
 // scripts/location_media.js
-// Background IMAGE + layered MUSIC manager (supports multiple tracks per location)
+// Background IMAGE + layered MUSIC manager (paints into #location-hero)
 (function(){
   if (window.__LocationMediaInstalled) return;
   window.__LocationMediaInstalled = true;
 
-  // --- CONFIG: map each location to background image + one OR MORE music files ---
-  // Images are .png per your latest list. Music filenames keep spaces.
+  // --- CONFIG: each location => background image + one or more music files ---
   window.LOCATION_MEDIA = {
-    "Start": {
-      image: "Assets/Backgrounds/start.png",
-      music: ["Assets/Music/start song.mp3"]
-    },
-    "CreateParty": {
-      image: "Assets/Backgrounds/start.png",
-      music: ["Assets/Music/start song.mp3"]
-    },
-    "Town Square": {
-      image: "Assets/Backgrounds/town_square.png",
-      music: ["Assets/Music/town square.mp3"]
-    },
-    "Inn": {
-      image: "Assets/Backgrounds/inn.png",
-      music: [
-        "Assets/Music/inn fire.mp3",
-        "Assets/Music/inn noise.mp3"
-      ]
-    },
-    "Market": {
-      image: "Assets/Backgrounds/market.png",
-      music: [
-        "Assets/Music/market noise.mp3",
-        "Assets/Music/market song.mp3"
-      ]
-    },
-    "Wilderness": {
-      image: "Assets/Backgrounds/wilderness.png",
-      music: [
-        "Assets/Music/wilderness.mp3",
-        "Assets/Music/woods.mp3"
-      ]
-    },
-    "Cave Entrance": {
-      image: "Assets/Backgrounds/cave.png",
-      music: [
-        "Assets/Music/cave music.mp3",
-        "Assets/Music/cave ambience.mp3"
-      ]
-    },
-    "Settings": {
-      image: "Assets/Backgrounds/edda.png",
-      music: ["Assets/Music/ourlordisnotready.mp3"]
-    }
+    "Start":        { image: "Assets/Backgrounds/start.png",        music: ["Assets/Music/start song.mp3"] },
+    "CreateParty":  { image: "Assets/Backgrounds/start.png",        music: ["Assets/Music/start song.mp3"] },
+    "Town Square":  { image: "Assets/Backgrounds/town_square.png",  music: ["Assets/Music/town square.mp3"] },
+    "Inn":          { image: "Assets/Backgrounds/inn.png",          music: ["Assets/Music/inn fire.mp3","Assets/Music/inn noise.mp3"] },
+    "Market":       { image: "Assets/Backgrounds/market.png",       music: ["Assets/Music/market noise.mp3","Assets/Music/market song.mp3"] },
+    "Wilderness":   { image: "Assets/Backgrounds/wilderness.png",   music: ["Assets/Music/wilderness.mp3","Assets/Music/woods.mp3"] },
+    "Cave Entrance":{ image: "Assets/Backgrounds/cave.png",         music: ["Assets/Music/cave music.mp3","Assets/Music/cave ambience.mp3"] },
+    "Settings":     { image: "Assets/Backgrounds/settings.png",         music: ["Assets/Music/ourlordisnotready.mp3"] }
+
+    // NEW: show art for non-location tabs too
+    "Menu":       { image: "Assets/Backgrounds/start.png",           music: ["Assets/Music/start song.mp3"] },
+  "Sheet":      { image: "Assets/Backgrounds/inventorystats.png",  music: ["Assets/Music/start song.mp3"] },
+  "Inventory":  { image: "Assets/Backgrounds/inventorystats.png",  music: ["Assets/Music/start song.mp3"] },
   };
 
   // --- helpers: background layer + audio tracks ---
