@@ -13,11 +13,14 @@
     <h1>Echoes and Embers</h1>
     <div class="spacer"></div>
 
-    <!-- Only Save/Load/Reset remain in the header -->
-    <button class="btn small" id="btnSave">Save</button>
-    <button class="btn small" id="btnLoad">Load</button>
-    <button class="btn small" id="btnReset">Reset</button>
-  </header>
+<!-- ✅ New: Settings button in the top-right banner -->
+  <button class="btn small" id="btnSettings">Settings</button>
+
+  <!-- Existing -->
+  <button class="btn small" id="btnSave">Save</button>
+  <button class="btn small" id="btnLoad">Load</button>
+  <button class="btn small" id="btnReset">Reset</button>
+</header>
 
   <!-- Start Menu Overlay -->
   <div id="start-overlay" class="is-hidden" aria-hidden="true" role="dialog" aria-label="Start Menu">
@@ -70,7 +73,8 @@
   </div>
 
   <main>
-    <div class="tabs panel" id="tabbar"></div>
+   
+<div id="location-hero" class="panel hero" aria-label="Location art"></div>
 
     <div id="screen-container" class="col">
       <!-- Main Menu -->
@@ -206,21 +210,38 @@
             <label class="row"><input type="checkbox" id="set-reduced"> Reduce Motion</label>
           </div>
           <div class="col">
-            <h3>Audio</h3>
+          <!-- ✅ New: Quick Game options (placeholders for now) -->
+<div class="panel section" id="settings-quick">
+  <h3>Game</h3>
+  <div class="choice-list">
+<button class="btn" id="set-online">Online Connect</button>
+<button class="btn" id="set-load">Load</button>
+<button class="btn warn" id="set-quit">Quit to Start</button>
+  </div>
+  <p class="tag">These options are placeholders for now; we’ll wire them up later.</p>
+</div>
 
-            <!-- ✅ Working music controls -->
-            <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">
-              <button class="btn small" id="music-toggle" type="button">Music: On</button>
-              <label class="row" style="gap:6px;align-items:center">
-                Music Volume
-                <input id="bgm-volume" type="range" min="0" max="1" step="0.05" value="0.7" style="width:180px">
-              </label>
-            </div>
+<div class="divider" style="margin:8px 0"></div>
 
-            <!-- (kept) Legacy mute checkbox; now wired to the same system -->
-            <label class="row"><input type="checkbox" id="set-mute"> Mute Sounds (legacy)</label>
 
-            <p class="tag">SFX slider below controls sound effects only.</p>
+<!-- Music controls -->
+<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">
+  <button class="btn small" id="music-toggle" type="button">Music: On</button>
+  <label class="row" style="gap:6px;align-items:center">
+    Music Volume
+    <input id="bgm-volume" type="range" min="0" max="1" step="0.05" value="0.7" style="width:180px">
+  </label>
+</div>
+
+<!-- NEW: SFX volume -->
+<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center; margin-top:6px">
+  <label class="row" style="gap:6px;align-items:center">
+    SFX Volume
+    <input id="sfx-volume" type="range" min="0" max="1" step="0.01" value="0.8" style="width:180px">
+  </label>
+</div>
+
+<p class="tag">SFX test buttons appear below.</p>
 
             <h3>Appearance</h3>
             <label>Theme
@@ -248,78 +269,53 @@
   </main>
 </div>
 
-<!-- Load the media manager as a plain script -->
-<script src="./scripts/location_media.js"></script>
-<!-- BEGIN: Inline Media Manager (no external path required) -->
+<!-- BEGIN: Inline Media Manager (clean) -->
 <script>
 (function(){
   if (window.__LocationMediaInstalled) return;
   window.__LocationMediaInstalled = true;
 
-  // ===== YOUR MEDIA MAP (PNG backgrounds, MP3 music) =====
+  // ===== LOCATION → image + music map =====
   window.LOCATION_MEDIA = {
-    "Start": {
-      image: "Assets/Backgrounds/start.png",
-      music: ["Assets/Music/start song.mp3"]
-    },
-    "CreateParty": {
-      image: "Assets/Backgrounds/start.png",
-      music: ["Assets/Music/start song.mp3"]
-    },
-    "Town Square": {
-      image: "Assets/Backgrounds/town_square.png",
-      music: ["Assets/Music/town square.mp3"]
-    },
-    "Inn": {
-      image: "Assets/Backgrounds/inn.png",
-      music: ["Assets/Music/inn fire.mp3","Assets/Music/inn noise.mp3"]
-    },
-    "Market": {
-      image: "Assets/Backgrounds/market.png",
-      music: ["Assets/Music/market noise.mp3","Assets/Music/market song.mp3"]
-    },
-    "Wilderness": {
-      image: "Assets/Backgrounds/wilderness.png",
-      music: ["Assets/Music/wilderness.mp3","Assets/Music/woods.mp3"]
-    },
-    "Cave Entrance": {
-      image: "Assets/Backgrounds/cave.png",
-      music: ["Assets/Music/cave music.mp3","Assets/Music/cave ambience.mp3"]
-    },
-    "Settings": {
-      image: "Assets/Backgrounds/edda.png",
-      music: ["Assets/Music/ourlordisnotready.mp3"]
-    }
-  };
+    "Start":         { image: "Assets/Backgrounds/start.png",       music: ["Assets/Music/start song.mp3"] },
+    "CreateParty":   { image: "Assets/Backgrounds/start.png",       music: ["Assets/Music/start song.mp3"] },
+    "Town Square":   { image: "Assets/Backgrounds/town_square.png", music: ["Assets/Music/town square.mp3"] },
+    "Inn":           { image: "Assets/Backgrounds/inn.png",         music: ["Assets/Music/inn fire.mp3","Assets/Music/inn noise.mp3"] },
+    "Market":        { image: "Assets/Backgrounds/market.png",      music: ["Assets/Music/market noise.mp3","Assets/Music/market song.mp3"] },
+    "Wilderness":    { image: "Assets/Backgrounds/wilderness.png",  music: ["Assets/Music/wilderness.mp3","Assets/Music/woods.mp3"] },
+    "Cave Entrance": { image: "Assets/Backgrounds/cave.png",        music: ["Assets/Music/cave music.mp3","Assets/Music/cave ambience.mp3"] },
+    "Settings":      { image: "Assets/Backgrounds/settings.png",        music: ["Assets/Music/ourlordisnotready.mp3"] },
+    "Inventory":    { image: "Assets/Backgrounds/inventorystats.png"},
+    "Sheet":    { image: "Assets/Backgrounds/inventorystats.png"},
+    "Menu":          { image: "Assets/Backgrounds/start.png",       music: ["Assets/Music/start song.mp3"] },
+  
+    };
 
-  // ===== helpers =====
-  function ensureBgLayer(){
-    let layer = document.getElementById('bg-layer');
-    if (!layer){
-      layer = document.createElement('div');
-      layer.id = 'bg-layer';
-      Object.assign(layer.style, {
-        position:'fixed', inset:'0', zIndex:'-1',
-        backgroundSize:'cover', backgroundPosition:'center',
-        transition:'opacity 300ms ease', opacity:'1'
-      });
-      document.body.prepend(layer);
-    }
-    return layer;
+  // -- hero panel under tabs --
+  function ensureHero(){
+    let el = document.getElementById('location-hero');
+    if (!el){
+      const tabbar = document.getElementById('tabbar');
+      el = document.createElement('div');
+      el.id = 'location-hero';
+      el.className = 'panel hero';
+      (tabbar || document.querySelector('main')).insertAdjacentElement('afterend', el);
+      // start collapsed until something sets an image
+el.classList.add('collapsed'); 
+  }
+    return el;
   }
 
+  // -- audio helpers --
   function hardStopAllAudioElements(){
     document.querySelectorAll('audio').forEach(a => {
       try { a.pause(); } catch {}
       try { a.src = ''; a.removeAttribute('src'); a.load?.(); } catch {}
       try { a.remove(); } catch {}
     });
-    if (window.__bgmTracks) {
-      window.__bgmTracks.forEach(a => { try{ a.pause(); a.src=''; a.remove(); }catch{} });
-    }
+    (window.__bgmTracks||[]).forEach(a=>{ try{ a.pause(); a.src=''; a.remove(); }catch{} });
     window.__bgmTracks = [];
   }
-
   function currentVolume(){
     const v = parseFloat(localStorage.getItem('bgmVolume') || '0.7');
     return isNaN(v) ? 0.7 : Math.max(0, Math.min(1, v));
@@ -327,7 +323,6 @@
   function currentMuted(){
     return localStorage.getItem('bgmMuted') === 'true';
   }
-
   function installAutoplayUnblocker(){
     if (window.__mediaAutoplayUnblockerInstalled) return;
     window.__mediaAutoplayUnblockerInstalled = true;
@@ -336,14 +331,12 @@
       document.addEventListener(ev, resume, { once:true, passive:true })
     );
   }
-
   function setBgm(sources){
     hardStopAllAudioElements();
     const list = Array.isArray(sources) ? sources : (sources ? [sources] : []);
     window.__bgmTracks = [];
-    if (!list.length){ console.log('[media] setBgm: no sources'); return; }
+    if (!list.length) return;
     installAutoplayUnblocker();
-
     list.forEach(src => {
       const safe = encodeURI(src);
       const a = new Audio(safe);
@@ -358,18 +351,27 @@
     });
   }
 
-  // ===== public API =====
+  // -- public API --
   window.MediaManager = {
     setLocation(key){
-      const m = window.LOCATION_MEDIA[key];
-      if (!m){ console.warn('[media] no mapping for', key); return; }
-      const layer = ensureBgLayer();
-      layer.style.opacity = '0';
-      const img = m.image ? `url('${encodeURI(m.image)}')` : '';
-      setTimeout(() => { layer.style.backgroundImage = img; layer.style.opacity = '1'; }, 60);
-      setBgm(m.music);
-      localStorage.setItem('lastLocation', key);
-    },
+  const m = window.LOCATION_MEDIA[key] || {};
+  const hero = ensureHero();
+
+  if (m.image){
+    hero.classList.remove('collapsed');
+    hero.style.opacity = '0';
+    const img = `url('${encodeURI(m.image)}')`;
+    setTimeout(() => { hero.style.backgroundImage = img; hero.style.opacity = '1'; }, 60);
+  } else {
+    hero.style.backgroundImage = '';
+    hero.classList.add('collapsed');
+  }
+
+if (Object.prototype.hasOwnProperty.call(m, 'music')) {
+  setBgm(m.music);}
+  localStorage.setItem('lastLocation', key);
+},
+
     setInitialMusic(srcOrList){
       if (localStorage.getItem('bgmMuted') == null) localStorage.setItem('bgmMuted','false');
       if (localStorage.getItem('bgmVolume') == null) localStorage.setItem('bgmVolume','0.7');
@@ -389,10 +391,10 @@
   window.setLocationMedia = window.MediaManager.setLocation;
 })();
 </script>
-<!-- END: Inline Media Manager -->
+<!-- END: Inline Media Manager (clean) -->
 
 <!-- Then load your app as a module -->
 <script type="module" src="./main.js"></script>
+<div class="tabs panel" id="tabbar"></div>
 </body>
 </html>
-

@@ -11,7 +11,6 @@ export const UI = {
     {id:'town', label:'🏘️ Town'},
     {id:'sheet', label:'📜 Sheets'},
     {id:'inventory', label:'🎒 Inventory'},
-    {id:'settings', label:'⚙️ Settings'},
   ],
   init(){
     // Bridge Notifier to concrete UI functions
@@ -63,18 +62,43 @@ export const UI = {
     document.getElementById('btnSave').onclick=Storage.save;
     document.getElementById('btnLoad').onclick=Storage.load;
     document.getElementById('btnReset').onclick=()=>{ if(confirm('Reset game?')){localStorage.removeItem('hollowvale-save'); location.reload();} };
-  },
-  goto(id){
-    // Screen routing
-    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-    const el = document.getElementById(`screen-${id}`);
-    if(el){ el.classList.add('active'); }
 
-    if(id==='town'){ window.Scenes?.townSquare?.(); }
-    if(id==='sheet'){ UI.refreshSheet(); }
-    if(id==='settings'){ window.SettingsUI?.syncForm?.(); }
-    if(id==='inventory'){ UI.refreshInventory(); }
-  },
+    // Open Settings screen from the header
+const btnSettings = document.getElementById('btnSettings');
+if (btnSettings) btnSettings.onclick = () => UI.goto('settings');
+
+// Initialize Settings UI handlers (safe to call once)
+SettingsUI.init?.();
+ },
+  
+goto(id){
+  // Screen routing
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el = document.getElementById(`screen-${id}`);
+  if(el){ el.classList.add('active'); }
+
+  // Highlight the active tab
+  document.querySelectorAll('#tabbar button').forEach(b => b.classList.remove('active'));
+  const idx = this.tabs.findIndex(t => t.id === id);
+  if (idx >= 0) {
+    const tb = document.getElementById('tabbar');
+    const btn = tb.querySelectorAll('button')[idx];
+    if (btn) btn.classList.add('active');
+  }
+
+  // Update hero art for UI tabs (no music change)
+  if (id === 'menu')      window.setLocationMedia?.('Menu');
+  if (id === 'create')    window.setLocationMedia?.('CreateParty');
+  if (id === 'sheet')     window.setLocationMedia?.('Sheet');
+  if (id === 'inventory') window.setLocationMedia?.('Inventory');
+
+  // Existing logic
+  if(id==='town'){ window.Scenes?.townSquare?.(); }   // scenes set their own media (with music)
+  if(id==='sheet'){ UI.refreshSheet(); }
+  if(id==='settings'){ window.SettingsUI?.syncForm?.(); }
+  if(id==='inventory'){ UI.refreshInventory(); }
+},
+
   toast(msg){
     const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t);
     setTimeout(()=>t.remove(), (window.Settings?.data?.reduced) ? 1200 : 2200);
@@ -301,10 +325,23 @@ function isActive(id){
 }
 
 export const SettingsUI = {
-  init(){
-    document.getElementById('set-save').onclick = ()=>{ this.readForm(); Settings.save(); };
-    document.getElementById('set-reset').onclick = ()=>{ Settings.reset(); this.syncForm(); };
-  },
+init(){
+  // existing settings actions
+  const btnSave  = document.getElementById('set-save');
+  const btnReset = document.getElementById('set-reset');
+  btnSave  && (btnSave.onclick  = ()=>{ this.readForm(); Settings.save(); });
+  btnReset && (btnReset.onclick = ()=>{ Settings.reset(); this.syncForm(); });
+
+  // ✅ NEW: placeholders for your three options inside Settings
+  const btnOnline = document.getElementById('set-online'); // "Online Connect"
+  const btnLoad   = document.getElementById('set-load');   // "Load"
+  const btnQuit   = document.getElementById('set-quit');   // "Quit to Start"
+
+  btnOnline && (btnOnline.onclick = () => UI.toast('Online Connect (coming soon)'));
+  btnLoad   && (btnLoad.onclick   = () => UI.toast('Load (coming soon)'));
+  btnQuit   && (btnQuit.onclick   = () => UI.toast('Quit to Start (coming soon)'));
+},
+
   syncForm(){
     document.getElementById('set-textsize').value = String(Settings.data.textSize||16);
     document.getElementById('set-mute').checked = !!Settings.data.muted;
