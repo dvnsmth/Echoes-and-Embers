@@ -4,22 +4,42 @@
   if (window.__LocationMediaInstalled) return;
   window.__LocationMediaInstalled = true;
 
-  // --- CONFIG: each location => background image + one or more music files ---
-  window.LOCATION_MEDIA = {
-    "Start":        { image: "Assets/Backgrounds/start.png",        music: ["Assets/Music/start song.mp3"] },
-    "CreateParty":  { image: "Assets/Backgrounds/start.png",        music: ["Assets/Music/start song.mp3"] },
-    "Town Square":  { image: "Assets/Backgrounds/town_square.png",  music: ["Assets/Music/town square.mp3"] },
-    "Inn":          { image: "Assets/Backgrounds/inn.png",          music: ["Assets/Music/inn fire.mp3","Assets/Music/inn noise.mp3"] },
-    "Market":       { image: "Assets/Backgrounds/market.png",       music: ["Assets/Music/market noise.mp3","Assets/Music/market song.mp3"] },
-    "Wilderness":   { image: "Assets/Backgrounds/wilderness.png",   music: ["Assets/Music/wilderness.mp3","Assets/Music/woods.mp3"] },
-    "Cave Entrance":{ image: "Assets/Backgrounds/cave.png",         music: ["Assets/Music/cave music.mp3","Assets/Music/cave ambience.mp3"] },
-    "Settings":     { image: "Assets/Backgrounds/settings.png",         music: ["Assets/Music/ourlordisnotready.mp3"] }
+  // --- CONFIG (no music on non-location tabs) ---
+window.LOCATION_MEDIA = {
+  "Start":        { image: "Assets/Backgrounds/start.png",        music: ["Assets/Music/start song.mp3"] },
+  "Town Square":  { image: "Assets/Backgrounds/town_square.png",  music: ["Assets/Music/town square.mp3"] },
+  "Inn":          { image: "Assets/Backgrounds/inn.png",          music: ["Assets/Music/inn fire.mp3","Assets/Music/inn noise.mp3"] },
+  "Market":       { image: "Assets/Backgrounds/market.png",       music: ["Assets/Music/market noise.mp3","Assets/Music/market song.mp3"] },
+  "Wilderness":   { image: "Assets/Backgrounds/wilderness.png",   music: ["Assets/Music/wilderness.mp3","Assets/Music/woods.mp3"] },
+  "Cave Entrance":{ image: "Assets/Backgrounds/cave.png",         music: ["Assets/Music/cave music.mp3","Assets/Music/cave ambience.mp3"] },
+  "Settings":     { image: "Assets/Backgrounds/settings.png",     music: ["Assets/Music/ourlordisnotready.mp3"] },
 
-    // NEW: show art for non-location tabs too
-    "Menu":       { image: "Assets/Backgrounds/start.png",           music: ["Assets/Music/start song.mp3"] },
-  "Sheet":      { image: "Assets/Backgrounds/inventorystats.png",  music: ["Assets/Music/start song.mp3"] },
-  "Inventory":  { image: "Assets/Backgrounds/inventorystats.png",  music: ["Assets/Music/start song.mp3"] },
-  };
+  // UI tabs: image only → KEEP whatever is already playing
+  "Menu":        { image: "Assets/Backgrounds/start.png" },
+  "CreateParty": { image: "Assets/Backgrounds/start.png" },
+  "Sheet":       { image: "Assets/Backgrounds/inventorystats.png" },
+  "Inventory":   { image: "Assets/Backgrounds/inventorystats.png" },
+};
+
+// Only switch music if this location defines it
+window.MediaManager = {
+  setLocation(key){
+    const m = window.LOCATION_MEDIA[key];
+    if (!m){ console.warn('[media] No media mapping for location:', key); return; }
+
+    const layer = ensureBgLayer();
+    layer.style.opacity = '0';
+    const img = m.image ? `url('${encodeURI(m.image)}')` : '';
+    setTimeout(() => { layer.style.backgroundImage = img; layer.style.opacity = '1'; }, 60);
+
+    if (Object.prototype.hasOwnProperty.call(m, 'music')) {
+      setBgm(m.music);
+    }
+    localStorage.setItem('lastLocation', key);
+  },
+  // ... rest unchanged ...
+};
+
 
   // --- helpers: background layer + audio tracks ---
   function ensureBgLayer(){
@@ -101,21 +121,31 @@
   }
 
   // --- public API ---
-  window.MediaManager = {
-    setLocation(key){
-      const m = window.LOCATION_MEDIA[key];
-      if (!m){ console.warn('[media] No media mapping for location:', key); return; }
+window.MediaManager = {
+  setLocation(key){
+    const m = window.LOCATION_MEDIA[key];
+    if (!m){ 
+      console.warn('[media] No media mapping for location:', key); 
+      return; 
+    }
 
-      // background crossfade
-      const layer = ensureBgLayer();
-      layer.style.opacity = '0';
-      const img = m.image ? `url('${encodeURI(m.image)}')` : '';
-      setTimeout(() => { layer.style.backgroundImage = img; layer.style.opacity = '1'; }, 60);
+    // background crossfade
+    const layer = ensureBgLayer();
+    layer.style.opacity = '0';
+    const img = m.image ? `url('${encodeURI(m.image)}')` : '';
+    setTimeout(() => { 
+      layer.style.backgroundImage = img; 
+      layer.style.opacity = '1'; 
+    }, 60);
 
-      // layered music
+    // only switch music if explicitly defined
+    if (Object.prototype.hasOwnProperty.call(m, 'music')) {
       setBgm(m.music);
-      localStorage.setItem('lastLocation', key);
-    },
+    }
+
+    localStorage.setItem('lastLocation', key);
+  },
+
     setInitialMusic(srcOrList){
       // default to unmuted the first time unless user already toggled mute
       if (localStorage.getItem('bgmMuted') == null) {

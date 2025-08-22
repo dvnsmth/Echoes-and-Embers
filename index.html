@@ -13,11 +13,14 @@
     <h1>Echoes and Embers</h1>
     <div class="spacer"></div>
 
-    <!-- Only Save/Load/Reset remain in the header -->
-    <button class="btn small" id="btnSave">Save</button>
-    <button class="btn small" id="btnLoad">Load</button>
-    <button class="btn small" id="btnReset">Reset</button>
-  </header>
+<!-- ✅ New: Settings button in the top-right banner -->
+  <button class="btn small" id="btnSettings">Settings</button>
+
+  <!-- Existing -->
+  <button class="btn small" id="btnSave">Save</button>
+  <button class="btn small" id="btnLoad">Load</button>
+  <button class="btn small" id="btnReset">Reset</button>
+</header>
 
   <!-- Start Menu Overlay -->
   <div id="start-overlay" class="is-hidden" aria-hidden="true" role="dialog" aria-label="Start Menu">
@@ -70,7 +73,7 @@
   </div>
 
   <main>
-   <div class="tabs panel" id="tabbar"></div>
+   
 <div id="location-hero" class="panel hero" aria-label="Location art"></div>
 
     <div id="screen-container" class="col">
@@ -207,7 +210,19 @@
             <label class="row"><input type="checkbox" id="set-reduced"> Reduce Motion</label>
           </div>
           <div class="col">
-            <h3>Audio</h3>
+          <!-- ✅ New: Quick Game options (placeholders for now) -->
+<div class="panel section" id="settings-quick">
+  <h3>Game</h3>
+  <div class="choice-list">
+<button class="btn" id="set-online">Online Connect</button>
+<button class="btn" id="set-load">Load</button>
+<button class="btn warn" id="set-quit">Quit to Start</button>
+  </div>
+  <p class="tag">These options are placeholders for now; we’ll wire them up later.</p>
+</div>
+
+<div class="divider" style="margin:8px 0"></div>
+
 
 <!-- Music controls -->
 <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">
@@ -269,8 +284,12 @@
     "Market":        { image: "Assets/Backgrounds/market.png",      music: ["Assets/Music/market noise.mp3","Assets/Music/market song.mp3"] },
     "Wilderness":    { image: "Assets/Backgrounds/wilderness.png",  music: ["Assets/Music/wilderness.mp3","Assets/Music/woods.mp3"] },
     "Cave Entrance": { image: "Assets/Backgrounds/cave.png",        music: ["Assets/Music/cave music.mp3","Assets/Music/cave ambience.mp3"] },
-    "Settings":      { image: "Assets/Backgrounds/settings.png",        music: ["Assets/Music/ourlordisnotready.mp3"] }
-  };
+    "Settings":      { image: "Assets/Backgrounds/settings.png",        music: ["Assets/Music/ourlordisnotready.mp3"] },
+    "Inventory":    { image: "Assets/Backgrounds/inventorystats.png"},
+    "Sheet":    { image: "Assets/Backgrounds/inventorystats.png"},
+    "Menu":          { image: "Assets/Backgrounds/start.png",       music: ["Assets/Music/start song.mp3"] },
+  
+    };
 
   // -- hero panel under tabs --
   function ensureHero(){
@@ -282,9 +301,8 @@
       el.className = 'panel hero';
       (tabbar || document.querySelector('main')).insertAdjacentElement('afterend', el);
       // start collapsed until something sets an image
-ensureHero().classList.add('collapsed');
-
-    }
+el.classList.add('collapsed'); 
+  }
     return el;
   }
 
@@ -349,7 +367,8 @@ ensureHero().classList.add('collapsed');
     hero.classList.add('collapsed');
   }
 
-  setBgm(m.music);
+if (Object.prototype.hasOwnProperty.call(m, 'music')) {
+  setBgm(m.music);}
   localStorage.setItem('lastLocation', key);
 },
 
@@ -374,8 +393,8 @@ ensureHero().classList.add('collapsed');
 </script>
 <!-- END: Inline Media Manager (clean) -->
 
-
 <!-- Then load your app as a module -->
 <script type="module" src="./main.js"></script>
+<div class="tabs panel" id="tabbar"></div>
 </body>
 </html>
