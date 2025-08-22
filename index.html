@@ -87,40 +87,44 @@
         </div>
       </section>
 
-      <!-- Party Creator -->
-      <section id="screen-create" class="screen panel section">
-        <h2>Party</h2>
-        <div class="grid cols-2">
-          <div class="col">
-            <h3>Create a Character</h3>
-            <div class="grid cols-2">
-              <label>Name<input id="cc-name" placeholder="Arin, Lira, ..."></label>
-              <label>Race<select id="cc-race"></select></label>
-              <label>Class<select id="cc-class"></select></label>
-              <label>Background<input id="cc-bg" placeholder="(optional)"></label>
-            </div>
-            <div class="divider"></div>
-            <h3>Allocate Stats (27 points)</h3>
-            <div id="cc-stats" class="grid cols-3"></div>
-            <div class="row">
-              <span class="pill"><strong>Points</strong> <span id="cc-points">27</span></span>
-              <div class="spacer"></div>
-              <button class="btn good" id="cc-add">Add to Party</button>
-              <button class="btn" id="cc-new">Create a New Character</button>
-            </div>
-            <p class="tag">Race bonuses apply on creation. Tap a stat to adjust.</p>
-          </div>
-          <div class="col">
-            <h3>Current Party <span class="tag" id="party-count">0 / 4</span></h3>
-            <div id="party-list" class="col"></div>
-            <div class="row">
-              <button class="btn" onclick="UI.goto('menu')">⬅ Back</button>
-              <div class="spacer"></div>
-              <button class="btn primary" onclick="UI.goto('town')">Enter Town</button>
-            </div>
-          </div>
-        </div>
-      </section>
+<!-- Party Creator -->
+<section id="screen-create" class="screen panel section">
+  <h2>Party</h2>
+  <div class="grid cols-2">
+    <div class="col">
+      <h3>Create a Character</h3>
+      <div class="grid cols-2">
+        <label>Name<input id="cc-name" placeholder="Arin, Lira, ..."></label>
+        <label>Race<select id="cc-race"></select></label>
+        <label>Class<select id="cc-class"></select></label>
+        <label>Background<input id="cc-bg" placeholder="(optional)"></label>
+      </div>
+      <div class="divider"></div>
+      <h3>Allocate Stats (12 points)</h3>
+      <div id="cc-stats" class="grid cols-3"></div>
+      <div class="row">
+        <span class="pill"><strong>Points</strong> <span id="cc-points">12</span></span>
+        <div class="spacer"></div>
+        <button class="btn good" id="cc-add">Add to Party</button>
+        <button class="btn" id="cc-new">Create a New Character</button>
+      </div>
+      <p class="tag">
+        Race bonuses apply on creation. Tap a stat to adjust. Stats use a compressed 10–60 scale and
+        provide multiple benefits (e.g., DEX affects speed, crit, and defense).
+      </p>
+    </div>
+    <div class="col">
+      <h3>Current Party <span class="tag" id="party-count">0 / 4</span></h3>
+      <div id="party-list" class="col"></div>
+      <div class="row">
+        <button class="btn" onclick="UI.goto('menu')">⬅ Back</button>
+        <div class="spacer"></div>
+        <button class="btn primary" onclick="UI.goto('town')">Enter Town</button>
+      </div>
+    </div>
+  </div>
+</section>
+
 
       <!-- Town -->
       <section id="screen-town" class="screen panel section">
@@ -147,12 +151,15 @@
         <div id="dlg-choices" class="choice-list"></div>
       </section>
 
+
+
+
       <!-- Combat -->
       <section id="screen-combat" class="screen panel section">
         <div class="row" style="align-items:center;gap:10px">
           <h2>⚔️ Battle</h2>
           <div class="pill" id="turn-indicator" title="Current turn" style="margin-left:6px">—</div>
-          <div class="pill" id="round-tracker" title="Round / Turn" style="margin-left:6px">—</div>
+          <div class="pill" id="round-tracker" title="Turns elapsed" style="margin-left:6px">—</div>
           <div class="spacer"></div>
           <button class="btn small" onclick="Combat.tryFlee()">🏃 Attempt Flee</button>
         </div>

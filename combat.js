@@ -1,471 +1,614 @@
+// combat.js — ATB + AP hybrid loop
 import { State, Notifier } from './state.js';
 import { DB } from './db.js';
-import { Utils, calcMod } from './utils.js';
+import { Utils } from './utils.js';
 import { addGold, grantXP } from './character.js';
 import { Storage } from './storage.js';
 import { AudioManager } from './audio.js';
 
-function actionBtn(label, on){
-  const b=document.createElement('button');
-  b.className='btn'; b.textContent=label; b.onclick=()=>{ try{ AudioManager.play('select'); }catch{}; on(); };
+// NEW: ATB + damage helpers
+import {
+  derivedFrom,
+  physicalDamage,
+  magicalDamage,
+  BASE_AP_PER_TURN,
+  AP_CARRY_CAP_DEFAULT,
+} from './stats.js';
+import { ATBController } from './atb.js';
+
+// ---------- small UI helpers ----------
+function actionBtn(label, on) {
+  const b = document.createElement('button');
+  b.className = 'btn';
+  b.textContent = label;
+  b.onclick = () => { try { AudioManager.play('select'); } catch {} on(); };
   return b;
 }
-function nameOf(x){ return x.meta? x.name : x.name; }
-function hpbar(current, max){
-  const pct = Math.max(0, Math.min(100, Math.round((current/max)*100)));
+function hpbar(current, max) {
+  const pct = Math.max(0, Math.min(100, Math.round((current / max) * 100)));
   return `<div class="hpbar"><div style="width:${pct}%"></div></div>`;
 }
+function nameOf(x) { return x.name; }
 
+// ---------- lightweight enemy wrapper for derived math ----------
+function makeEnemyFromDB(def) {
+  // Existing enemy DB uses hp/atk/def, etc. Map that into derivedFrom gear fields.
+  const base = DB.enemies[def.type];
+  const id = Utils.uid();
+
+  const enemy = {
+    id,
+    name: def.type,
+    emoji: base.emoji || '👾',
+
+    // Minimal stat bag (10–60 scale baseline 12’s so math is sane)
+    stats: { STR: 12, DEX: 12, CON: 12, INT: 12, WIS: 12, LCK: 12 },
+
+    // Gear-like mapping to hit your derived formulas:
+    gear: {
+      baseHP: base.hp ?? 100,          // becomes HP backbone
+      armor: base.def ?? 0,            // DEF contribution
+      ward: base.res ?? 0,             // RES contribution (optional in your DB)
+      weapon: base.atk ?? 0,           // PAtk contribution
+      focus: base.matk ?? 0,           // MAtk contribution (optional)
+    },
+
+    temp: {},
+    getStats() { return this.stats; },
+    getDerived() {
+      if (!this._derivedCache) {
+        this._derivedCache = derivedFrom(this.stats, this.gear);
+      }
+      return this._derivedCache;
+    },
+    _damage(n) {
+      this.hp = Math.max(0, Math.min(this.maxHP, this.hp - (n | 0)));
+    },
+  };
+
+  const d = enemy.getDerived();
+  enemy.maxHP = d.HP;
+  enemy.hp = enemy.maxHP;
+
+  // Simple AI tag passthrough
+  enemy.ai = base.ai || 'random';
+
+  return enemy;
+}
+
+// ---------- crit helper (uses derived critPct from attacker) ----------
+function maybeCrit(attDer, baseDamage) {
+  const roll = Math.random() * 100;
+  const crit = (attDer.critPct || 0) > roll;
+  return {
+    damage: crit ? Math.floor(baseDamage * 1.5) : baseDamage,
+    crit,
+  };
+}
+
+// ================================================================
+//                         COMBAT CONTROLLER
+// ================================================================
 export const Combat = {
-  active:null,
-  _queued:null,
-  _lastRewards:null,   // {xp, gold, loot:[]}
-  _stats:null,         // { [partyId]: {dealt,taken,healGiven,healReceived} }
+  active: null,
+  _queued: null,
+  _lastRewards: null,   // {xp, gold, loot:[]}
+  _stats: null,         // { [partyId]: {dealt,taken,healGiven,healReceived} }
 
-  start(enemyDefs, opts={}){
-    const { skipPreview=false } = opts;
-    if(!skipPreview){
+  // ATB engine refs
+  _atb: null,
+  _currentEnt: null,    // entity object from ATB (ally or enemy)
+  _currentChar: null,   // pointer to State.party member or enemy wrapper
+  _pauseMode: true,     // freeze when someone is ready (mobile friendly)
+
+  start(enemyDefs, opts = {}) {
+    const { skipPreview = false } = opts;
+    if (!skipPreview) {
       this._queued = enemyDefs;
       this.showPreview(enemyDefs);
       return;
     }
-    if(State.party.length===0){ Notifier.toast('You need at least one party member.'); return; }
+    if (State.party.length === 0) { Notifier.toast('You need at least one party member.'); return; }
 
-    const enemies = enemyDefs.map(e=>{
-      const base=DB.enemies[e.type];
-      return {id:Utils.uid(), name:e.type, hp:base.hp, maxHP:base.hp, atk:base.atk, def:base.def, dmg:base.dmg, ai:base.ai, emoji:base.emoji};
+    // Build enemy wrappers
+    const enemies = enemyDefs.map(e => makeEnemyFromDB(e));
+
+    // Build ATB controller
+    this._atb = new ATBController({ pauseMode: this._pauseMode });
+
+    // Register allies
+    State.party.forEach(ch => {
+      // Prepare runtime carry caps if you want to alter via passives later
+      ch.apCarry = ch.apCarry ?? 0;
+      ch.apCarryCap = ch.apCarryCap ?? AP_CARRY_CAP_DEFAULT;
+
+      this._atb.addEntity({
+        id: ch.id,
+        side: 'ally',
+        name: ch.name,
+        getStats: () => ch.getStats(),
+        onTurnStart: () => {},
+        onTurnEnd:   () => {},
+      });
     });
 
-    const order = [
-      ...State.party.map(p=>({type:'ally', id:p.id, init:Utils.rand(1,20)+p.meta.init})),
-      ...enemies.map(en=>({type:'enemy', id:en.id, init:Utils.rand(1,20)}))
-    ].sort((a,b)=>b.init-a.init);
+    // Register enemies
+    enemies.forEach(en => {
+      en.apCarry = 0;
+      en.apCarryCap = AP_CARRY_CAP_DEFAULT;
+      this._atb.addEntity({
+        id: en.id,
+        side: 'enemy',
+        name: en.name,
+        getStats: () => en.getStats(),
+        onTurnStart: () => {},
+        onTurnEnd:   () => {},
+      });
+    });
 
-    // init combat
-    this.active = {enemies, order, turn:0, round:1};
-    // per-party stats
+    // init combat state
+    this.active = { enemies, turnCount: 0, round: 1 };
+    // per‑party stats
     this._stats = {};
-    State.party.forEach(p=>{ this._stats[p.id] = {dealt:0,taken:0,healGiven:0,healReceived:0}; });
+    State.party.forEach(p => { this._stats[p.id] = { dealt: 0, taken: 0, healGiven: 0, healReceived: 0 }; });
 
     Notifier.goto('combat');
     this.render(true);
-    this.log(`Round ${this.active.round} begins.`);
+    this.log(`Battle begins.`);
+    this._bootLoop();
   },
 
   // ---------- PREVIEW ----------
-  showPreview(enemyDefs){
+  showPreview(enemyDefs) {
     const ov = document.getElementById('prebattle-overlay');
     const list = document.getElementById('pb-enemies');
     const g = document.getElementById('pb-gold');
     const x = document.getElementById('pb-xp');
-    if(!ov || !list) return;
+    if (!ov || !list) return;
 
     list.innerHTML = '';
-    enemyDefs.forEach(e=>{
+    enemyDefs.forEach(e => {
       const base = DB.enemies[e.type];
       const row = document.createElement('div');
-      row.className='stat';
-      row.innerHTML = `<b>${base.emoji || '👾'} ${e.type}</b><span>HP ${base.hp} • DEF ${base.def}</span>`;
+      row.className = 'stat';
+      row.innerHTML = `<b>${base.emoji || '👾'} ${e.type}</b><span>HP ${base.hp} • DEF ${base.def ?? 0}</span>`;
       list.appendChild(row);
     });
 
-    if(g) g.textContent = '5–12';
-    if(x) x.textContent = '30–60';
+    if (g) g.textContent = '5–12';
+    if (x) x.textContent = '30–60';
 
     const start = document.getElementById('pb-start');
     const cancel = document.getElementById('pb-cancel');
-    start.onclick = ()=>{
+    start.onclick = () => {
       this.hidePreview();
-      this.start(this._queued, {skipPreview:true});
+      this.start(this._queued, { skipPreview: true });
       this._queued = null;
     };
-    cancel.onclick = ()=>{ this.hidePreview(); };
+    cancel.onclick = () => { this.hidePreview(); };
 
     ov.classList.remove('is-hidden');
-    ov.setAttribute('aria-hidden','false');
+    ov.setAttribute('aria-hidden', 'false');
   },
-  hidePreview(){
+  hidePreview() {
     const ov = document.getElementById('prebattle-overlay');
-    if(!ov) return;
+    if (!ov) return;
     ov.classList.add('is-hidden');
-    ov.setAttribute('aria-hidden','true');
+    ov.setAttribute('aria-hidden', 'true');
   },
 
-  // ---------- LIFECYCLE ----------
-  livingAllies(){ return State.party.filter(c=>c.hp>0); },
-  livingEnemies(){ return (this.active?.enemies||[]).filter(e=>e.hp>0); },
+  // ---------- basic helpers ----------
+  livingAllies() { return State.party.filter(c => c.hp > 0); },
+  livingEnemies() { return (this.active?.enemies || []).filter(e => e.hp > 0); },
 
-  currentActor(){
-    const c=this.active; if(!c) return null;
-    for(let i=c.turn; i<c.order.length; i++){
-      const act=c.order[i];
-      if(act.type==='ally'){
-        const ch=State.party.find(p=>p.id===act.id); if(ch && ch.hp>0) return act;
-      } else {
-        const en=c.enemies.find(e=>e.id===act.id); if(en && en.hp>0) return act;
+  // ================================================================
+  //                      ATB LOOP / TURN FLOW
+  // ================================================================
+  _bootLoop() {
+    // Simple RAF loop that ticks the ATB and pops turns in pause mode
+    let last = performance.now();
+    const tick = (now) => {
+      if (!this.active) return;
+      const dt = (now - last) / 1000;
+      last = now;
+
+      // If a turn is waiting (pause mode), do not advance time
+      this._atb.tick(dt);
+
+      if (!this._currentEnt && this._atb.hasTurnReady()) {
+        // Someone is ready: freeze the world (pause mode handled in ATB)
+        const ent = this._atb.popTurn();
+        this._beginTurn(ent);
       }
-    }
-    return null;
+
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
   },
 
-  render(){
-    const c=this.active; if(!c) return;
+  _beginTurn(ent) {
+    // ent has { id, side, ap } from ATBController
+    this._currentEnt = ent;
+
+    if (ent.side === 'ally') {
+      const ch = State.party.find(p => p.id === ent.id);
+      this._currentChar = ch;
+      ch.ap = ent.ap;              // give AP for this turn
+      this.active.turnCount++;
+      this.render();
+      this.updateIndicators(ent);
+      this.log(`Your turn: ${ch.name} (AP ${ch.ap})`);
+      // Player will choose actions; endTurn when AP == 0 or player taps End Turn
+    } else {
+      const en = this.active.enemies.find(e => e.id === ent.id);
+      this._currentChar = en;
+      en.ap = ent.ap;
+      this.active.turnCount++;
+      this.render();
+      this.updateIndicators(ent);
+      setTimeout(() => this.enemyAct(en), (window.Settings?.data?.reduced) ? 0 : 260);
+    }
+  },
+
+  _endTurn(carry = 0) {
+    if (!this._currentEnt) return;
+    // Commit carryover (capped by entity's apCarryCap, handled inside ATB)
+    this._atb.endTurn(this._currentEnt, { carry });
+    this._currentEnt = null;
+    this._currentChar = null;
+
+    // Check end conditions
+    this.checkEnd();
+    if (this.active) this.render();
+  },
+
+  // ================================================================
+  //                                UI
+  // ================================================================
+  render() {
+    const active = this.active; if (!active) return;
 
     // Party UI
-    const pWrap=document.getElementById('combat-party'); pWrap.innerHTML='';
-    State.party.forEach(ch=>{
-      const row=document.createElement('div'); row.className='stat';
-      row.dataset.id = ch.id; row.dataset.side='ally';
-      row.innerHTML=`<div><b>${ch.name}</b>${hpbar(ch.hp, ch.maxHP)}</div><span>HP ${ch.hp}/${ch.maxHP}</span>`;
+    const pWrap = document.getElementById('combat-party'); pWrap.innerHTML = '';
+    State.party.forEach(ch => {
+      const row = document.createElement('div'); row.className = 'stat';
+      row.dataset.id = ch.id; row.dataset.side = 'ally';
+      row.innerHTML = `<div><b>${ch.name}</b>${hpbar(ch.hp, ch.maxHP)}</div><span>HP ${ch.hp}/${ch.maxHP}</span>`;
       pWrap.appendChild(row);
     });
 
     // Enemy UI
-    const eWrap=document.getElementById('combat-enemies'); eWrap.innerHTML='';
-    c.enemies.forEach(en=>{
-      const row=document.createElement('div'); row.className='stat';
-      row.dataset.id = en.id; row.dataset.side='enemy';
-      row.innerHTML=`<div><b>${en.emoji}</b>${hpbar(en.hp, en.maxHP)}</div><span>HP ${en.hp}/${en.maxHP}</span>`;
+    const eWrap = document.getElementById('combat-enemies'); eWrap.innerHTML = '';
+    active.enemies.forEach(en => {
+      const row = document.createElement('div'); row.className = 'stat';
+      row.dataset.id = en.id; row.dataset.side = 'enemy';
+      row.innerHTML = `<div><b>${en.emoji}</b>${hpbar(en.hp, en.maxHP)}</div><span>HP ${en.hp}/${en.maxHP}</span>`;
       eWrap.appendChild(row);
     });
 
-    this.updateIndicators();
     this.renderActions();
   },
 
-  updateIndicators(){
-    const c=this.active; if(!c) return;
+  updateIndicators(ent = this._currentEnt) {
     const ti = document.getElementById('turn-indicator');
     const rt = document.getElementById('round-tracker');
 
     // Clear highlights
-    document.querySelectorAll('#combat-party .stat, #combat-enemies .stat').forEach(el=>el.classList.remove('active-turn'));
+    document.querySelectorAll('#combat-party .stat, #combat-enemies .stat').forEach(el => el.classList.remove('active-turn'));
 
-    const me = this.nextActorPeek();
-    const totalAlive = this.livingAllies().length + this.livingEnemies().length;
-    const turnNum = Math.min(c.turn+1, totalAlive) || 1;
-    if(rt) rt.textContent = `Round ${c.round} — Turn ${turnNum}/${totalAlive}`;
+    // We no longer track rounds/initiative. Show total turns elapsed.
+    if (rt) rt.textContent = `Turns: ${this.active?.turnCount ?? 0}`;
 
-    if(!me){ if(ti) ti.textContent='—'; return; }
-    if(me.type==='ally'){
-      const ch=State.party.find(p=>p.id===me.id);
-      if(ti) ti.textContent = `🛡️ ${ch?.name || 'Ally'} turn`;
-      const row = document.querySelector(`#combat-party .stat[data-id="${me.id}"]`);
+    if (!ent) { if (ti) ti.textContent = '—'; return; }
+    if (ent.side === 'ally') {
+      const row = document.querySelector(`#combat-party .stat[data-id="${ent.id}"]`);
       row && row.classList.add('active-turn');
+      const ch = State.party.find(p => p.id === ent.id);
+      if (ti) ti.textContent = `🛡️ ${ch?.name || 'Ally'} turn (AP ${ch?.ap ?? 0})`;
     } else {
-      const en=c.enemies.find(e=>e.id===me.id);
-      if(ti) ti.textContent = `👾 ${en?.name || 'Enemy'} turn`;
-      const row = document.querySelector(`#combat-enemies .stat[data-id="${me.id}"]`);
+      const row = document.querySelector(`#combat-enemies .stat[data-id="${ent.id}"]`);
       row && row.classList.add('active-turn');
+      const en = this.active.enemies.find(e => e.id === ent.id);
+      if (ti) ti.textContent = `👾 ${en?.name || 'Enemy'} turn (AP ${en?.ap ?? 0})`;
     }
   },
 
-  renderActions(){
-    const wrap=document.getElementById('combat-actions'); wrap.innerHTML='';
-    const me = this.nextActor(); // lock to current live actor
-    if(!me){ this.checkEnd(); return; }
+  renderActions() {
+    const wrap = document.getElementById('combat-actions'); wrap.innerHTML = '';
+    if (!this._currentEnt) return; // waiting for someone to be ready
 
-    this.updateIndicators();
-
-    if(me.type==='enemy'){
-      setTimeout(()=>this.enemyAct(me), (window.Settings?.data?.reduced) ? 0 : 360);
+    if (this._currentEnt.side === 'enemy') {
+      // Enemy will act automatically
       return;
     }
 
-    const ch = State.party.find(p=>p.id===me.id);
-    wrap.appendChild(actionBtn(`Attack`, ()=>this.chooseTarget(ch)));
-    wrap.appendChild(actionBtn(`Ability`, ()=>this.chooseAbility(ch)));
-    wrap.appendChild(actionBtn(`Item`, ()=>{
-      if(State.inventory['Minor Tonic']){
-        const heal=6;
-        ch.hp=Math.min(ch.maxHP,ch.hp+heal);
+    const ch = this._currentChar;
+    if (!ch || ch.hp <= 0) { this._endTurn(0); return; }
+
+    // Show AP + actions; player can chain while AP > 0
+    wrap.appendChild(actionBtn(`Attack (1 AP)`, () => this.chooseTarget(ch, 1)));
+    wrap.appendChild(actionBtn(`Ability (2 AP+)`, () => this.chooseAbility(ch)));
+    wrap.appendChild(actionBtn(`Item (1 AP)`, () => {
+      if (State.inventory['Minor Tonic']) {
+        const heal = 6;
+        ch.hp = Math.min(ch.maxHP, ch.hp + heal);
         State.inventory['Minor Tonic']--;
-        try{ AudioManager.play('heal'); }catch{}
-        this._bumpHeal(ch.id, ch.id, heal); // self heal tracked as given+received
+        try { AudioManager.play('heal'); } catch {}
+        this._bumpHeal(ch.id, ch.id, heal);
         this.log(`${ch.name} uses a tonic (+${heal} HP).`);
         this.render();
-        this.endTurn();
+        ch.ap -= 1;
+        if (ch.ap <= 0) this._endTurn(Math.min(2, 0)); else this.renderActions();
       } else Notifier.toast('No items.');
+    }));
+    wrap.appendChild(actionBtn(`End Turn`, () => {
+      // carry whatever AP remains (capped)
+      const carry = Math.max(0, Math.min(ch.ap, ch.apCarryCap ?? AP_CARRY_CAP_DEFAULT));
+      this._endTurn(carry);
     }));
   },
 
-  nextActorPeek(){
-    const c=this.active; if(!c) return null;
-    let t=c.turn;
-    while(t < c.order.length){
-      const act=c.order[t];
-      if(act.type==='ally'){
-        const ch=State.party.find(p=>p.id===act.id); if(ch && ch.hp>0) return act; else t++;
-      } else {
-        const en=c.enemies.find(e=>e.id===act.id); if(en && en.hp>0) return act; else t++;
-      }
-    }
-    return null;
-  },
-
-  nextActor(){
-    const c=this.active; if(!c) return null;
-    while(c.turn < c.order.length){
-      const act=c.order[c.turn];
-      if(act.type==='ally'){
-        const ch=State.party.find(p=>p.id===act.id); if(ch && ch.hp>0) return act; else c.turn++;
-      } else {
-        const en=c.enemies.find(e=>e.id===act.id); if(en && en.hp>0) return act; else c.turn++;
-      }
-    }
-    c.turn=0; c.round++;
-    this.log(`Round ${c.round} begins.`);
-    return this.nextActor();
-  },
-
-  chooseTarget(ch){
-    const wrap=document.getElementById('combat-actions'); wrap.innerHTML='';
-    this.livingEnemies().forEach(en=>{
-      wrap.appendChild(actionBtn(`Hit ${en.name}`, ()=>this.doAttack(ch,en)));
+  // ========= target selection =========
+  chooseTarget(ch, apCost = 1) {
+    const wrap = document.getElementById('combat-actions'); wrap.innerHTML = '';
+    this.livingEnemies().forEach(en => {
+      wrap.appendChild(actionBtn(`→ Hit ${en.name}`, () => this.doAttack(ch, en, apCost)));
     });
-    wrap.appendChild(actionBtn('Back', ()=>this.renderActions()));
+    wrap.appendChild(actionBtn('Back', () => this.renderActions()));
   },
 
-  // NEW: choose ally target (for heals/buffs)
-  chooseAlly(ch, cb){
-    const wrap=document.getElementById('combat-actions'); wrap.innerHTML='';
-    this.livingAllies().forEach(ally=>{
-      wrap.appendChild(actionBtn(`→ ${ally.name}`, ()=>cb(ally)));
+  // choose ally target (heals/buffs)
+  chooseAlly(ch, cb) {
+    const wrap = document.getElementById('combat-actions'); wrap.innerHTML = '';
+    this.livingAllies().forEach(ally => {
+      wrap.appendChild(actionBtn(`→ ${ally.name}`, () => cb(ally)));
     });
-    wrap.appendChild(actionBtn('Back', ()=>this.renderActions()));
+    wrap.appendChild(actionBtn('Back', () => this.renderActions()));
   },
 
-  chooseAbility(ch){
-    const wrap=document.getElementById('combat-actions'); wrap.innerHTML='';
-    const abl = (DB.classes[ch.clazz].abilities||[]).filter(a=>a.lvl<=ch.level);
-    abl.forEach(a=>wrap.appendChild(actionBtn(a.name,()=>this.useAbility(ch,a.name))));
-    wrap.appendChild(actionBtn('Back', ()=>this.renderActions()));
+  // ========= abilities =========
+  chooseAbility(ch) {
+    const wrap = document.getElementById('combat-actions'); wrap.innerHTML = '';
+    const abl = (DB.classes[ch.clazz]?.abilities || []).filter(a => a.lvl <= ch.level);
+    abl.forEach(a => wrap.appendChild(actionBtn(a.name, () => this.useAbility(ch, a.name))));
+    wrap.appendChild(actionBtn('Back', () => this.renderActions()));
   },
 
-  // tracking helpers
-  _bumpDamage(attackerId, targetId, dmg){
+  // ========= tracking helpers =========
+  _bumpDamage(attackerId, targetId, dmg) {
     const t = this._stats;
-    if(t && attackerId && t[attackerId]) t[attackerId].dealt += dmg;
-    if(t && targetId && t[targetId]) t[targetId].taken += dmg;
+    if (t && attackerId && t[attackerId]) t[attackerId].dealt += dmg;
+    if (t && targetId && t[targetId]) t[targetId].taken += dmg;
   },
-  _bumpHeal(healerId, targetId, amt){
+  _bumpHeal(healerId, targetId, amt) {
     const t = this._stats;
-    if(t && healerId && t[healerId]) t[healerId].healGiven += amt;
-    if(t && targetId && t[targetId]) t[targetId].healReceived += amt;
+    if (t && healerId && t[healerId]) t[healerId].healGiven += amt;
+    if (t && targetId && t[targetId]) t[targetId].healReceived += amt;
   },
 
-  // Rolls & damage
-  hitRoll(attacker, defender){
-    const atk = attacker.meta? (10 + calcMod(attacker.stats[ DB.classes[attacker.clazz].primary ]) ) : attacker.atk;
-    const def = defender.meta? defender.meta.armor : defender.def;
-    const roll = Utils.roll(20) + atk;
-    return {roll, def};
+  // ========= new damage (derived math + crit) =========
+  _doPhysical(attacker, target, skillPower = 1.0) {
+    const aDer = attacker.getDerived ? attacker.getDerived() : derivedFrom(attacker.getStats(), attacker.gear);
+    const tDer = target.getDerived ? target.getDerived() : derivedFrom(target.getStats(), target.gear);
+    const base = physicalDamage(aDer, tDer, skillPower);
+    const { damage, crit } = maybeCrit(aDer, base);
+    return { damage, crit };
   },
-  damage(attacker, base){
-    if(attacker.meta){
-      const w=attacker.equips.weapon; const die = w.dmg[1]; const dice=w.dmg[0];
-      let dmg=0; for(let i=0;i<dice;i++) dmg+=Utils.roll(die);
-      dmg += calcMod(attacker.stats.STR);
-      if(attacker.clazz==='Rogue') dmg += 1;
-      return Math.max(1,dmg + (base||0));
-    } else {
-      const [cnt,die] = [1, attacker.dmg[1]];
-      let d=0; for(let i=0;i<cnt;i++) d+=Utils.roll(die);
-      return Math.max(1, d);
-    }
+  _doMagical(attacker, target, skillPower = 1.0) {
+    const aDer = attacker.getDerived ? attacker.getDerived() : derivedFrom(attacker.getStats(), attacker.gear);
+    const tDer = target.getDerived ? target.getDerived() : derivedFrom(target.getStats(), target.gear);
+    const base = magicalDamage(aDer, tDer, skillPower);
+    const { damage, crit } = maybeCrit(aDer, base);
+    return { damage, crit };
   },
 
-  doAttack(attacker, target){
-    const {roll,def} = this.hitRoll(attacker,target);
-    if(roll>=def){
-      let extra=0; if(attacker.meta && attacker.meta.openingStrike){ extra+=1; attacker.meta.openingStrike=0; }
-      const dmg = this.damage(attacker, extra);
-      target.hp = Math.max(0, target.hp - dmg);
-      // track if ally involved
-      const atkId = attacker.meta ? attacker.id : null;
-      const tgtId = target.meta ? target.id : null;
-      this._bumpDamage(atkId, tgtId, dmg);
+  // ========= basic attack =========
+  doAttack(attacker, target, apCost = 1) {
+    if (!this._currentChar || attacker.id !== this._currentChar.id) return;
+    if ((attacker.ap | 0) < apCost) { Notifier.toast('Not enough AP.'); return; }
 
-      this.log(`${nameOf(attacker)} hits ${nameOf(target)} for ${dmg}.`);
-    } else {
-      this.log(`${nameOf(attacker)} misses ${nameOf(target)}.`);
-    }
+    const { damage, crit } = this._doPhysical(attacker, target, 1.0);
+    target._damage(damage);
+    try { AudioManager.play('hit'); } catch {}
+    this._bumpDamage(attacker.id || null, target.id || null, damage);
+    this.log(`${nameOf(attacker)} hits ${nameOf(target)} for ${damage}${crit ? ' (CRIT)' : ''}.`);
+
+    attacker.ap -= apCost;
     this.render();
-    this.endTurn();
+    if (attacker.ap <= 0) {
+      this._endTurn(Math.min(attacker.apCarryCap ?? AP_CARRY_CAP_DEFAULT, 0));
+    } else {
+      this.renderActions();
+    }
   },
 
-  useAbility(ch, name){
+  // ========= abilities (examples migrated to derived math) =========
+  useAbility(ch, name) {
     const enemies = this.livingEnemies();
-    switch(name){
-      case 'Power Strike': return this._targeted(ch, en=>{
-        const {roll,def}=this.hitRoll(ch,en);
-        if(roll>=def){
-          const dmg=this.damage(ch,2);
-          en.hp=Math.max(0,en.hp-dmg);
-          
-          try{ AudioManager.play('hit'); }catch{}
-this._bumpDamage(ch.id, null, 0); // keep structure (optional)
-          this._bumpDamage(ch.id, null, 0);
-          this._bumpDamage(ch.id, undefined, 0);
-          this._bumpDamage(ch.id, (en.meta?en.id:null), dmg); // enemy wont be counted; safe
-          this.log(`${ch.name} uses Power Strike for ${dmg}.`);
-        } else this.log(`${ch.name}'s strike misses.`);
-        this.render(); this.endTurn();
-      });
+    switch (name) {
+      case 'Power Strike': {
+        const cost = 2;
+        if (ch.ap < cost) { Notifier.toast('Not enough AP.'); return this.renderActions(); }
+        return this._targetEnemy(ch, (en) => {
+          const { damage, crit } = this._doPhysical(ch, en, 1.25); // modest skillPower
+          en._damage(damage);
+          try { AudioManager.play('hit'); } catch {}
+          this._bumpDamage(ch.id, en.id || null, damage);
+          this.log(`${ch.name} uses Power Strike for ${damage}${crit ? ' (CRIT)' : ''}.`);
+          ch.ap -= cost;
+          this.render();
+          if (ch.ap <= 0) this._endTurn(0); else this.renderActions();
+        });
+      }
 
       case 'Twin Shot': {
-        if(enemies.length===0) return;
-        const en=enemies[0];
-        for(let i=0;i<2;i++){
-          const {roll,def}=this.hitRoll(ch,en);
-          if(roll>=def){
-            const dmg=Math.max(1,this.damage(ch,-1));
-            en.hp=Math.max(0,en.hp-dmg);
-            this._bumpDamage(ch.id, null, 0);
-            this._bumpDamage(ch.id, (en.meta?en.id:null), dmg);
-            this.log(`${ch.name} arrow ${i+1} hits for ${dmg}.`);
-          } else this.log('Arrow misses.');
+        const cost = 2;
+        if (ch.ap < cost) { Notifier.toast('Not enough AP.'); return this.renderActions(); }
+        if (enemies.length === 0) return;
+        // Hit the front enemy twice at –10% each for flavor
+        const en = enemies[0];
+        for (let i = 0; i < 2; i++) {
+          const { damage, crit } = this._doPhysical(ch, en, 0.9);
+          en._damage(damage);
+          this._bumpDamage(ch.id, en.id || null, damage);
+          this.log(`${ch.name} arrow ${i + 1} hits for ${damage}${crit ? ' (CRIT)' : ''}.`);
         }
-        this.render(); return this.endTurn();
+        ch.ap -= cost;
+        this.render();
+        if (ch.ap <= 0) this._endTurn(0); else this.renderActions();
+        return;
       }
 
-      case 'Sneak Attack': return this._targeted(ch, en=>{
-        const {roll,def}=this.hitRoll(ch,en);
-        if(roll>=def){
-          const dmg=this.damage(ch,Utils.roll(4));
-          en.hp=Math.max(0,en.hp-dmg);
-          this._bumpDamage(ch.id, (en.meta?en.id:null), dmg);
-          this.log(`${ch.name} Sneak Attacks for ${dmg}.`);
-        } else this.log('The stab fails.');
-        this.render(); this.endTurn();
-      });
+      case 'Sneak Attack': {
+        const cost = 2;
+        if (ch.ap < cost) { Notifier.toast('Not enough AP.'); return this.renderActions(); }
+        return this._targetEnemy(ch, (en) => {
+          const { damage, crit } = this._doPhysical(ch, en, 1.4);
+          en._damage(damage);
+          this._bumpDamage(ch.id, en.id || null, damage);
+          this.log(`${ch.name} Sneak Attacks for ${damage}${crit ? ' (CRIT)' : ''}.`);
+          ch.ap -= cost;
+          this.render();
+          if (ch.ap <= 0) this._endTurn(0); else this.renderActions();
+        });
+      }
 
-      case 'Firebolt': return this._targeted(ch, en=>{
-        const atk = 10+calcMod(ch.stats.INT);
-        const roll=Utils.roll(20)+atk;
-        if(roll>=en.def){
-          const dmg=2+Utils.roll(6);
-          en.hp=Math.max(0,en.hp-dmg);
-          this._bumpDamage(ch.id, (en.meta?en.id:null), dmg);
-          this.log(`${ch.name} hurls Firebolt for ${dmg}.`);
-        } else this.log('The bolt fizzles.');
-        this.render(); this.endTurn();
-      });
+      case 'Firebolt': {
+        const cost = 2;
+        if (ch.ap < cost) { Notifier.toast('Not enough AP.'); return this.renderActions(); }
+        return this._targetEnemy(ch, (en) => {
+          const { damage, crit } = this._doMagical(ch, en, 1.3);
+          en._damage(damage);
+          this._bumpDamage(ch.id, en.id || null, damage);
+          this.log(`${ch.name} hurls Firebolt for ${damage}${crit ? ' (CRIT)' : ''}.`);
+          ch.ap -= cost;
+          this.render();
+          if (ch.ap <= 0) this._endTurn(0); else this.renderActions();
+        });
+      }
 
-      // UPDATED: Heal can choose any ally
       case 'Heal': {
-        return this.chooseAlly(ch, (ally)=>{
-          const amt = 4+calcMod(ch.stats.WIS);
-          const healed = Math.max(0, Math.min(ally.maxHP - ally.hp, amt));
-          ally.hp = Math.min(ally.maxHP, ally.hp + amt);
-          if(healed>0) this._bumpHeal(ch.id, ally.id, healed);
+        const cost = 2;
+        if (ch.ap < cost) { Notifier.toast('Not enough AP.'); return this.renderActions(); }
+        return this.chooseAlly(ch, (ally) => {
+          // Simple heal: WIS+INT backed — feel free to swap to your healing formula
+          const aDer = ch.getDerived();
+          const base = 4 + Math.floor((aDer.MAtk / 8) + (aDer.RES / 10));
+          const healed = Math.max(0, Math.min(ally.maxHP - ally.hp, base));
+          ally.hp = Math.min(ally.maxHP, ally.hp + base);
+          if (healed > 0) this._bumpHeal(ch.id, ally.id, healed);
           this.log(`${ch.name} heals ${ally.name} for ${healed}.`);
-          this.render(); this.endTurn();
+          ch.ap -= cost;
+          this.render();
+          if (ch.ap <= 0) this._endTurn(0); else this.renderActions();
         });
       }
 
       case 'Inspire': {
+        const cost = 1;
+        if (ch.ap < cost) { Notifier.toast('Not enough AP.'); return this.renderActions(); }
         ch.meta._inspire = 1;
-        this.log(`${ch.name} inspires the party (next ally +1 attack).`);
-        this.render(); return this.endTurn();
+        this.log(`${ch.name} inspires the party (next ally +10% damage).`);
+        ch.ap -= cost;
+        this.render();
+        if (ch.ap <= 0) this._endTurn(0); else this.renderActions();
+        return;
       }
 
-      default: Notifier.toast('Ability not implemented (yet).');
+      default:
+        Notifier.toast('Ability not implemented (yet).');
+        return this.renderActions();
     }
   },
 
-  _targeted(ch, fn){
-    const wrap=document.getElementById('combat-actions'); wrap.innerHTML='';
-    this.livingEnemies().forEach(en=>wrap.appendChild(actionBtn(`→ ${en.name}`,()=>{ fn(en); })));
-    wrap.appendChild(actionBtn('Back', ()=>this.renderActions()));
+  _targetEnemy(ch, fn) {
+    const wrap = document.getElementById('combat-actions'); wrap.innerHTML = '';
+    this.livingEnemies().forEach(en => wrap.appendChild(actionBtn(`→ ${en.name}`, () => { fn(en); })));
+    wrap.appendChild(actionBtn('Back', () => this.renderActions()));
   },
 
-  enemyAct(me){
-    const c=this.active; if(!c) return;
-    const en = c.enemies.find(e=>e.id===me.id);
-    const targets = this.livingAllies(); if(targets.length===0) return;
-    let tgt=targets[0];
-    if(en.ai==='lowest'){ tgt = targets.sort((a,b)=>a.hp-b.hp)[0]; }
-    else if(en.ai==='random'){ tgt = Utils.choice(targets); }
+  // ========= enemy AI (simple) =========
+  enemyAct(en) {
+    if (!this.active) return;
+    if (!this._currentEnt || this._currentEnt.id !== en.id) return;
 
-    const {roll,def}=this.hitRoll(en,tgt);
-    let atkBonus=0; if(State.party.some(p=>p.meta && p.meta._inspire)){ atkBonus=1; State.party.forEach(p=>p.meta._inspire=0); }
-    if(roll+atkBonus>=def){
-      const dmg=this.damage(en);
-      tgt.hp=Math.max(0,tgt.hp-dmg);
-      
-      try{ AudioManager.play('hit'); }catch{}
-this._bumpDamage(null, tgt.id, dmg); // enemy dealt to ally
-      this.log(`${en.name} hits ${tgt.name} for ${dmg}.`);
-    } else {
-      this.log(`${en.name} misses ${tgt.name}.`);
+    const targets = this.livingAllies(); if (targets.length === 0) return;
+    let tgt = targets[0];
+    if (en.ai === 'lowest') tgt = targets.sort((a, b) => a.hp - b.hp)[0];
+    else if (en.ai === 'random') tgt = Utils.choice(targets);
+
+    // Enemy spends AP until 0: basic attacks
+    const swings = Math.max(1, Math.min(3, en.ap | 0));
+    for (let i = 0; i < swings && tgt.hp > 0; i++) {
+      const { damage, crit } = this._doPhysical(en, tgt, 1.0);
+      // Inspire buff check (+10% to next ally damage): enemy ignores it
+      tgt._damage ? tgt._damage(damage) : (tgt.hp = Math.max(0, tgt.hp - damage));
+      try { AudioManager.play('hit'); } catch {}
+      this._bumpDamage(null, tgt.id, damage);
+      this.log(`${en.name} hits ${tgt.name} for ${damage}${crit ? ' (CRIT)' : ''}.`);
+      en.ap -= 1;
+      if (tgt.hp <= 0) break;
     }
+
     this.render();
-    this.endTurn();
+    this._endTurn(0);
   },
 
-  endTurn(){
-    const c=this.active; if(!c) return;
-    c.turn++;
-    this.checkEnd();
-    if(this.active) this.render();
-  },
-
-  checkEnd(){
+  // ================================================================
+  //                     END / SUMMARY / ESCAPE
+  // ================================================================
+  checkEnd() {
     const allies = this.livingAllies();
     const foes = this.livingEnemies();
-    if(allies.length===0){
+    if (allies.length === 0) {
       this.log('Your party falls…');
       Notifier.toast('Defeat.');
-      try{ AudioManager.play('defeat'); }catch{}
-      this.active=null;
+      try { AudioManager.play('defeat'); } catch {}
+      this.active = null;
       Storage.save();
       return;
     }
-    if(foes.length===0){
+    if (foes.length === 0) {
       // Determine rewards + loot (items auto-added to inventory)
-      const xp=Utils.rand(30,60);
-      const gold=Utils.rand(5,12);
+      const xp = Utils.rand(30, 60);
+      const gold = Utils.rand(5, 12);
       const loot = [];
-      if(Utils.rand(1,100)<=30){
-        State.inventory['Minor Tonic'] = (State.inventory['Minor Tonic']||0)+1;
+      if (Utils.rand(1, 100) <= 30) {
+        State.inventory['Minor Tonic'] = (State.inventory['Minor Tonic'] || 0) + 1;
         loot.push('Minor Tonic ×1');
       }
       addGold(gold);
       grantXP(xp);
       Storage.save();
 
-      this._lastRewards = {xp, gold, loot};
+      this._lastRewards = { xp, gold, loot };
 
       // Show summary overlay (no auto-redirect)
-      try{ AudioManager.play('victory'); }catch{}
+      try { AudioManager.play('victory'); } catch {}
       this.showPostBattleSummary();
-
       return;
     }
   },
 
-  showPostBattleSummary(){
+  showPostBattleSummary() {
     const ov = document.getElementById('postbattle-overlay');
     const list = document.getElementById('post-summary');
     const sumGold = document.getElementById('sum-gold');
     const sumXP = document.getElementById('sum-xp');
     const sumItems = document.getElementById('sum-items');
     const finish = document.getElementById('post-finish');
-    if(!ov || !list) return;
+    if (!ov || !list) return;
 
-    // Fill totals
-    if(sumGold) sumGold.textContent = String(this._lastRewards?.gold ?? 0);
-    if(sumXP) sumXP.textContent = String(this._lastRewards?.xp ?? 0);
+    if (sumGold) sumGold.textContent = String(this._lastRewards?.gold ?? 0);
+    if (sumXP) sumXP.textContent = String(this._lastRewards?.xp ?? 0);
     const itemsText = (this._lastRewards?.loot?.length ? this._lastRewards.loot.join(', ') : '—');
-    if(sumItems) sumItems.textContent = `Items: ${itemsText}`;
+    if (sumItems) sumItems.textContent = `Items: ${itemsText}`;
 
-    // Per‑member stats
     list.innerHTML = '';
-    State.party.forEach(p=>{
-      const s = this._stats?.[p.id] || {dealt:0,taken:0,healGiven:0,healReceived:0};
+    State.party.forEach(p => {
+      const s = this._stats?.[p.id] || { dealt: 0, taken: 0, healGiven: 0, healReceived: 0 };
       const row = document.createElement('div');
-      row.className='stat';
+      row.className = 'stat';
       row.innerHTML = `
         <b>${p.name}</b>
         <div class="row" style="gap:8px;flex-wrap:wrap">
@@ -477,24 +620,23 @@ this._bumpDamage(null, tgt.id, dmg); // enemy dealt to ally
       list.appendChild(row);
     });
 
-    finish.onclick = ()=>{
-      // Clear log, close, go to town
-      const el=document.getElementById('combat-log');
-      if(el) el.innerHTML='';
+    finish.onclick = () => {
+      const el = document.getElementById('combat-log');
+      if (el) el.innerHTML = '';
       ov.classList.add('is-hidden');
-      ov.setAttribute('aria-hidden','true');
-      this.active=null;
+      ov.setAttribute('aria-hidden', 'true');
+      this.active = null;
       Notifier.goto('town');
     };
 
     ov.classList.remove('is-hidden');
-    ov.setAttribute('aria-hidden','false');
+    ov.setAttribute('aria-hidden', 'false');
   },
 
-  tryFlee(){
-    if(Utils.rand(1,100)<=50){
+  tryFlee() {
+    if (Utils.rand(1, 100) <= 50) {
       Notifier.toast('You flee successfully.');
-      this.active=null;
+      this.active = null;
       Storage.save();
       Notifier.goto('town');
     } else {
@@ -503,11 +645,11 @@ this._bumpDamage(null, tgt.id, dmg); // enemy dealt to ally
     }
   },
 
-  log(msg){
-    const el=document.getElementById('combat-log');
-    const p=document.createElement('p');
-    p.textContent=msg;
+  log(msg) {
+    const el = document.getElementById('combat-log');
+    const p = document.createElement('p');
+    p.textContent = msg;
     el.appendChild(p);
-    el.scrollTop=el.scrollHeight;
+    el.scrollTop = el.scrollHeight;
   }
 };
