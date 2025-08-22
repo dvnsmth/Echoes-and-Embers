@@ -1,0 +1,19 @@
+nventory/
+
+Owns: Party inventory and equipment flow:
+
+Stash/bag CRUD
+
+Equip/unequip to characters
+
+Shop transaction rules (price, availability hooks)
+Exposes:
+
+Add/remove/list items
+
+Equip/unequip and validation
+
+Purchase/sell operations
+Depends on: core (state/events), data (items), character, party.
+Must not depend on: ui, combat.
+Why: One place governs items and avoids gold drift.

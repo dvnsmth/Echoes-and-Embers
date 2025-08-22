@@ -1,0 +1,12 @@
+world/ (recommended new folder)
+
+Owns: Regions, nodes, and discovery/gating:
+
+Unlocked regions, node metadata, fog-of-war flags
+Exposes:
+
+Discover/lock regions & nodes
+
+Query what’s accessible and why
+Depends on: core, data (regions).
+Why: Gives narrative exploration a home separate from Town/Combat.

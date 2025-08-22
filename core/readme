@@ -1,0 +1,14 @@
+core/
+
+Owns: Engine plumbing shared by all:
+
+State/save (single source of truth + schema version)
+
+Events/messaging (publish/subscribe topics)
+
+Constants (AP economy caps, damage tags, topics)
+
+Utilities (IDs, RNG seed helpers, math helpers)
+Exposes: State load/save API, event topics, helper utils.
+Depends on: —
+Must not depend on: anything (foundation layer).

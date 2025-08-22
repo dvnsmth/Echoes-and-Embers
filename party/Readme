@@ -1,0 +1,19 @@
+party/
+
+Owns: Party-wide state:
+
+Roster (add/remove/order)
+
+Shared resources (gold, crafting mats)
+
+Party flags (difficulty, reputation slices if you choose)
+Exposes:
+
+Get/update roster
+
+Adjust/query shared resources
+
+Party-level checks (average level, roles present)
+Depends on: core, character, data (optional for defaults).
+Must not depend on: ui, town, combat.
+Why: Centralizes shared economy and roster management.

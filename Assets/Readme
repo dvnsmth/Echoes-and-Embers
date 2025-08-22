@@ -1,0 +1,6 @@
+assets/
+
+Owns: Art, music, SFX, fonts, spritesheets.
+Exposes: Nothing (files only).
+Depends on: —
+Notes: Keep a simple manifest in data (e.g., item icon → path) so UI can look up assets without hardcoding paths.

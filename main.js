@@ -44,7 +44,7 @@ function injectScriptOnce(src){
 async function ensureMediaManager(){
   if (window.MediaManager) return true;
   const candidates = [
-    './scripts/location_media.js',
+  './ui/location_media.js',
     './scripts/location%20media.js',
     './location_media.js',
     './location%20media.js'

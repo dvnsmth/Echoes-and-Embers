@@ -1,0 +1,12 @@
+skills/ (recommended new folder)
+
+Owns: Skill semantics & cooldowns:
+
+AP costs, tags, targeting rules, cooldown tracking
+Exposes:
+
+Validate “can use”, apply cooldown/charges
+
+Provide action descriptors for UI
+Depends on: core, data (skill tables).
+Why: Lets Combat ask “what happens?” without hardcoding skills.

@@ -1,0 +1,13 @@
+ui/
+
+Owns: Screens and user interaction:
+
+Start/Load, Party Creator, Inventory, Town, Combat view
+
+Button handlers & keyboard/touch bindings
+
+Subscribes to events and renders panels
+Exposes: None (entry points only).
+Depends on: core (events), gameplay domains (read/query/commands).
+Must not be imported by: any non-UI code.
+Why: Presentation separated from rules, easier to reskin.
