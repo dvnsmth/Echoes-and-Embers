@@ -6,5 +6,9 @@ export const Utils = {
   choice:(arr)=>arr[Math.floor(Math.random()*arr.length)]
 };
 
-export function baseStats(){return {STR:8,DEX:8,CON:8,INT:8,WIS:8,CHA:8}}
-export function calcMod(score){return Math.floor((score-10)/2)}
+// For backward compatibility some modules may still import these.
+// Align with the new system: Lv1 starts at 12 (10–60 band).
+export function baseStats(){ return { STR:12, DEX:12, CON:12, INT:12, WIS:12, LCK:12 }; }
+
+// Kept for legacy formulas (e.g., UI display); not used by the new combat math.
+export function calcMod(score){ return Math.floor((score-12)/2); }

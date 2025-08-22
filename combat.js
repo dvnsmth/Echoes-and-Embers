@@ -2,9 +2,12 @@
 import { State, Notifier } from './state.js';
 import { DB } from './db.js';
 import { Utils } from './utils.js';
-import { addGold, grantXP } from './character.js';
+import { grantXP } from './character.js';
+import { addGold } from './party.js';
 import { Storage } from './storage.js';
 import { AudioManager } from './audio.js';
+
+
 
 // NEW: ATB + damage helpers
 import {
