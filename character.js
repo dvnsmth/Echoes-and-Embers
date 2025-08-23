@@ -117,7 +117,7 @@ export function createCharacter({ name, race, clazz, bg, stats }) {
       xpMod: 1,
 
       // Abilities available at level 1
-      abilitiesUnlocked: [...(cls.abilities || []).filter(a => a.lvl === 1).map(a => a.name)],
+      abilitiesUnlocked: [(cls.abilities || []).filter(a => a.lvl === 1).map(a => a.name)],
 
       // cache of derived numbers (HP/PAtk/MAtk/DEF/RES/crit/atbSec)
       derived: null,
@@ -144,8 +144,48 @@ export function createCharacter({ name, race, clazz, bg, stats }) {
       this.stats = applyAllocation(this.stats, points); // respects clamp internally too
       this.unspent -= spend;
 
-      if (typeof refreshHPBound === 'function') refreshHPBound();
+      if (typeof refreshHPBounds === 'function') refreshHPBounds();
     },
   };
   return ch;
+}
+// --- XP progression (temporary placeholder curve) ---
+// Returns the cumulative XP required to REACH the given level (lvl 1 -> 0 XP).
+function xpNeededFor(level) {
+  if (level <= 1) return 0;
+  // Simple quadratic curve; replace with your data table later if desired.
+  // Example: 100 * n * (n - 1), where n = level
+  const n = level;
+  return 100 * n * (n - 1);
+}
+
+// --- Named export expected by combat.js ---
+export function grantXP(ch, amount) {
+  const inc = Math.max(0, amount | 0);
+  if (!inc) {
+    return { gained: 0, levels: 0, newLevel: ch.level, abilitiesUnlocked: [] };
+  }
+
+  // Add XP
+  ch.xp = (ch.xp | 0) + inc;
+
+  // Level-up loop (respects LV_CAP)
+  let levels = 0;
+  const unlocked = [];
+  while (ch.level < LV_CAP && ch.xp >= xpNeededFor(ch.level + 1)) {
+    ch.level += 1;
+    ch.unspent += PER_LEVEL_POINTS;
+
+    // Unlock any class abilities up to this new level
+    const newly = unlockAbilitiesToLevel(ch, ch.level) || [];
+    if (newly.length) unlocked.push(...newly);
+
+    // Refresh derived stats & clamp HP to new max
+    refreshHPBounds(ch);
+
+    levels += 1;
+  }
+
+  // Return a compact result for UI/logging
+  return { gained: inc, levels, newLevel: ch.level, abilitiesUnlocked: unlocked };
 }
