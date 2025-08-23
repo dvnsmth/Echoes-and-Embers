@@ -146,6 +146,19 @@ function TriggerEncounterPreset(presetKey = 'forest_road_t1', opts = {}) {
   openPrebattle(defs, () => startCombatWith(defs));
 }
 
+// main.js — optional: journal button/shortcut
+import { openJournal } from './quests/journal.js';
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  const btnJ = document.getElementById('btnJournal');
+  if (btnJ) btnJ.onclick = ()=>openJournal();
+  // Keyboard: press "J" to open Journal (dev-friendly)
+  document.addEventListener('keydown', (e)=>{
+    if (e.key?.toLowerCase() === 'j') openJournal();
+  });
+});
+
+
 function TriggerEncounterTable(tableKey = 'forest_road_t1', opts = {}) {
   const defs = buildEncounterFromTable(tableKey, {
     partyLevel: opts.partyLevel ?? partyLevelAvg(),
