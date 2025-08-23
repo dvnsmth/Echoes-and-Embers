@@ -93,7 +93,7 @@ export function createCharacter({ name, race, clazz, bg, stats }) {
     id, name, race, clazz, bg: bg || "",
     level: 1,
     xp: 0,
-    // Player allocation pool: 12 on level 1 for immediate customization
+    // Player allocation pool: 14 on level 1 for immediate customization
     unspent: LEVEL1_ALLOC_POINTS,
 
     // Base six stats (10–60 band). Player will allocate per level (+4 default).
@@ -117,7 +117,21 @@ export function createCharacter({ name, race, clazz, bg, stats }) {
       xpMod: 1,
 
       // Abilities available at level 1
-      abilitiesUnlocked: [(cls.abilities || []).filter(a => a.lvl === 1).map(a => a.name)],
+      abilitiesUnlocked: (cls.abilities || []).filter(a => a.lvl === 1).map(a => a.name),
+      // abilities at level 1 (flat array, not nested)
+      meta: {
+      armor: 10 + calcMod(base.DEX),
+      init: calcMod(base.DEX),
+      lucky: 0, openingStrike: 0,
+      xpMod: 1,
+      abilitiesUnlocked: (cls.abilities || [])
+      .filter(a => a.lvl === 1)
+      .map(a => a.name),
+      derived: null,
+      },
+
+
+
 
       // cache of derived numbers (HP/PAtk/MAtk/DEF/RES/crit/atbSec)
       derived: null,
@@ -143,10 +157,12 @@ export function createCharacter({ name, race, clazz, bg, stats }) {
       }
       this.stats = applyAllocation(this.stats, points); // respects clamp internally too
       this.unspent -= spend;
-
-      if (typeof refreshHPBounds === 'function') refreshHPBounds();
+      refreshHPBounds(this); // <-- pass the character
+      if (typeof refreshHPBounds === 'function') refreshHPBounds(this);
     },
   };
+  refreshHPBounds(ch);      // compute derived from base stats/gear/class
+  ch.hp = ch.maxHP;         // start healthy at creation
   return ch;
 }
 // --- XP progression (temporary placeholder curve) ---

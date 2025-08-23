@@ -62,12 +62,12 @@ export function magicalDamage(attacker, defender, skillPower = 1.0) {
 
 // Allocation + leveling
 export const LV_CAP = 40;
-export const LEVEL1_ALLOC_POINTS = 12; // at level 1
+export const LEVEL1_ALLOC_POINTS = 14; // at level 1
 export const PER_LEVEL_POINTS     = 4; // levels 2..40
 
 export function startingStats() {
-  // floor 12 in all stats
-  return { STR:12, DEX:12, CON:12, INT:12, WIS:12, LCK:12 };
+  // floor 10 in all stats
+  return { STR:10, DEX:10, CON:10, INT:10, WIS:10, LCK:10 };
 }
 
 export function applyAllocation(stats, alloc) {
