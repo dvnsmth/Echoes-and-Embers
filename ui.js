@@ -406,3 +406,11 @@ export const SettingsUI = {
     Settings.apply();
   }
 };
+// Quick pre-battle preview painter (optional; used by Scenes or others)
+export function showEncounterPreview(rows) {
+  const box = document.getElementById('pb-enemies');
+  if (!box) return;
+  box.innerHTML = rows.map(r =>
+    `${r.emoji ?? ''} <b>${r.key}</b> ×${r.count} <span class="tag">Lv ${r.level}</span>`
+  ).join('<br>');
+}

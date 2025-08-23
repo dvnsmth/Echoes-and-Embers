@@ -8,8 +8,13 @@ import { Combat } from './combat.js';
 import { Sheet } from './sheet.js';
 import { AudioManager } from './audio.js';
 import { AudioSettings } from './audiosettings.js';
+// Encounter system (direct imports)
+import { rollPreset, DIFFICULTY } from './encounterPresets.js';
+import { buildEncounterFromTable } from './spawnTables.js';
+import { instantiateEncounter, collapseEncounter, xpForEncounter } from './encounters.js';
+import { State } from './state.js'; // you already import Settings; add State, too
 
-Object.assign(window, { UI, SettingsUI, Scenes, Dialogue, Combat, Sheet, Settings, AudioManager });
+Object.assign(window, { UI, SettingsUI, Scenes, Dialogue, Combat, Sheet, Settings, State, AudioManager });
 
 // ---------- SFX ----------
 const SFX_MAP = {
@@ -77,6 +82,87 @@ const setVol   = (v) => {
   localStorage.setItem('bgmVolume', String(vol));
   try { MediaManager.setVolume(vol); } catch {}
 };
+// ---------- Encounter wiring (pre-battle preview + launch) ----------
+function partyLevelAvg() {
+  const p = State.party || [];
+  if (!p.length) return 1;
+  const sum = p.reduce((a, c) => a + (c.level || 1), 0);
+  return Math.max(1, Math.round(sum / p.length));
+}
+function partySize() { return (State.party || []).length || 1; }
+
+function renderPrebattle(defs) {
+  const box = document.getElementById('pb-enemies');
+  const rows = collapseEncounter(defs);
+  if (box) {
+    box.innerHTML = rows.map(r =>
+      `${r.emoji ?? ''} <b>${r.key}</b> ×${r.count} <span class="tag">Lv ${r.level}</span>`
+    ).join('<br>');
+  }
+  const xp = document.getElementById('pb-xp');
+  if (xp) xp.textContent = String(xpForEncounter(defs, partyLevelAvg()));
+}
+
+function openPrebattle(defs, onConfirm) {
+  renderPrebattle(defs);
+  const overlay = document.getElementById('prebattle-overlay');
+  const start   = document.getElementById('pb-start');
+  const cancel  = document.getElementById('pb-cancel');
+  if (!overlay) return;
+
+  overlay.classList.remove('is-hidden');
+
+  // (Re)bind fresh handlers
+  if (start)   start.onclick  = () => { overlay.classList.add('is-hidden'); onConfirm?.(); };
+  if (cancel)  cancel.onclick = () => overlay.classList.add('is-hidden');
+}
+
+function startCombatWith(defs) {
+  const foes = instantiateEncounter(defs);
+  // Call whatever your combat entry point is:
+  if (window.Combat?.start) {
+    Combat.start({ party: State.party, foes });
+  } else if (window.startCombat) {
+    window.startCombat({ party: State.party, foes });
+  } else if (window.Scenes?.combat) {
+    Scenes.combat({ party: State.party, foes });
+  } else {
+    console.warn('[encounters] No combat entry point found.');
+  }
+}
+
+// Public helpers you can call from Scenes or buttons:
+function TriggerEncounterPreset(presetKey = 'forest_road_t1', opts = {}) {
+  const defs = rollPreset(presetKey, {
+    partyLevel: opts.partyLevel ?? partyLevelAvg(),
+    partySize:  opts.partySize  ?? partySize(),
+    difficulty: opts.difficulty ?? DIFFICULTY.STANDARD,
+    seed:       opts.seed ?? Date.now().toString(36),
+    biomes:     opts.biomes,
+    families:   opts.families,
+    maxEnemies: opts.maxEnemies,
+    allowBossesBelowHard: opts.allowBossesBelowHard,
+  });
+  openPrebattle(defs, () => startCombatWith(defs));
+}
+
+function TriggerEncounterTable(tableKey = 'forest_road_t1', opts = {}) {
+  const defs = buildEncounterFromTable(tableKey, {
+    partyLevel: opts.partyLevel ?? partyLevelAvg(),
+    partySize:  opts.partySize  ?? partySize(),
+    difficulty: opts.difficulty ?? DIFFICULTY.STANDARD,
+    seed:       opts.seed ?? Date.now().toString(36),
+    maxEnemies: opts.maxEnemies,
+  });
+  openPrebattle(defs, () => startCombatWith(defs));
+}
+
+// Expose to console / other modules
+Object.assign(window, {
+  TriggerEncounterPreset,
+  TriggerEncounterTable,
+  DIFFICULTY,
+});
 
 // ---------- Wire a single, clean Settings panel ----------
 function wireSettingsControls(){
@@ -139,6 +225,8 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // Wire the single Settings panel
   wireSettingsControls();
+// Make sure pre-battle DOM nodes are found early
+renderPrebattle([]); // harmless; ensures elements exist before first encounter
 
   // Paint Start hero on first load (image under tabs via MediaManager in index.html)
   try { setLocationMedia && setLocationMedia('Start'); } catch {}

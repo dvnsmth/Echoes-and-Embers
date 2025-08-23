@@ -192,3 +192,6 @@ export const Dialogue = {
       ], 'town');
   },
 };
+TriggerEncounterPreset('forest_road_t1'); // quick forest fight
+// or
+TriggerEncounterTable('crypt_undead_t2'); // handcrafted recipe

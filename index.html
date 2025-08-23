@@ -5,6 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Echoes and Embers – RPG (Vertical Slice)</title>
   <link rel="stylesheet" href="./styles.css">
+
+  <!-- Optional: Import Map for clean module aliases (direct-import architecture) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "data/races": "./race.js",
+      "data/classes": "./class.js",
+      "data/skills": "./skills.js",
+      "data/enemies": "./enemies.js",
+      "systems/encounters": "./encounters.js",
+      "systems/presets": "./encounterPresets.js",
+      "systems/spawn": "./spawnTables.js"
+    }
+  }
+  </script>
 </head>
 <body>
 <div id="app">
@@ -13,14 +28,16 @@
     <h1>Echoes and Embers</h1>
     <div class="spacer"></div>
 
-<!-- ✅ New: Settings button in the top-right banner -->
-  <button class="btn small" id="btnSettings">Settings</button>
+    <!-- Quick access (new) -->
+    <button class="btn small" onclick="UI?.goto?.('inventory')">Inventory</button>
+    <button class="btn small" onclick="UI?.goto?.('sheet')">Characters</button>
 
-  <!-- Existing -->
-  <button class="btn small" id="btnSave">Save</button>
-  <button class="btn small" id="btnLoad">Load</button>
-  <button class="btn small" id="btnReset">Reset</button>
-</header>
+    <!-- Settings & system -->
+    <button class="btn small" id="btnSettings">Settings</button>
+    <button class="btn small" id="btnSave">Save</button>
+    <button class="btn small" id="btnLoad">Load</button>
+    <button class="btn small" id="btnReset">Reset</button>
+  </header>
 
   <!-- Start Menu Overlay -->
   <div id="start-overlay" class="is-hidden" aria-hidden="true" role="dialog" aria-label="Start Menu">
@@ -73,8 +90,7 @@
   </div>
 
   <main>
-   
-<div id="location-hero" class="panel hero" aria-label="Location art"></div>
+    <div id="location-hero" class="panel hero" aria-label="Location art"></div>
 
     <div id="screen-container" class="col">
       <!-- Main Menu -->
@@ -87,44 +103,43 @@
         </div>
       </section>
 
-<!-- Party Creator -->
-<section id="screen-create" class="screen panel section">
-  <h2>Party</h2>
-  <div class="grid cols-2">
-    <div class="col">
-      <h3>Create a Character</h3>
-      <div class="grid cols-2">
-        <label>Name<input id="cc-name" placeholder="Arin, Lira, ..."></label>
-        <label>Race<select id="cc-race"></select></label>
-        <label>Class<select id="cc-class"></select></label>
-        <label>Background<input id="cc-bg" placeholder="(optional)"></label>
-      </div>
-      <div class="divider"></div>
-      <h3>Allocate Stats (12 points)</h3>
-      <div id="cc-stats" class="grid cols-3"></div>
-      <div class="row">
-        <span class="pill"><strong>Points</strong> <span id="cc-points">12</span></span>
-        <div class="spacer"></div>
-        <button class="btn good" id="cc-add">Add to Party</button>
-        <button class="btn" id="cc-new">Create a New Character</button>
-      </div>
-      <p class="tag">
-        Race bonuses apply on creation. Tap a stat to adjust. Stats use a compressed 10–60 scale and
-        provide multiple benefits (e.g., DEX affects speed, crit, and defense).
-      </p>
-    </div>
-    <div class="col">
-      <h3>Current Party <span class="tag" id="party-count">0 / 4</span></h3>
-      <div id="party-list" class="col"></div>
-      <div class="row">
-        <button class="btn" onclick="UI.goto('menu')">⬅ Back</button>
-        <div class="spacer"></div>
-        <button class="btn primary" onclick="UI.goto('town')">Enter Town</button>
-      </div>
-    </div>
-  </div>
-</section>
-
+      <!-- Party Creator -->
+      <section id="screen-create" class="screen panel section">
+        <h2>Party</h2>
+        <div class="grid cols-2">
+          <div class="col">
+            <h3>Create a Character</h3>
+            <div class="grid cols-2">
+              <label>Name<input id="cc-name" placeholder="Arin, Lira, ..."></label>
+              <label>Race<select id="cc-race"></select></label>
+              <label>Class<select id="cc-class"></select></label>
+              <label>Background<input id="cc-bg" placeholder="(optional)"></label>
+            </div>
+            <div class="divider"></div>
+            <h3>Allocate Stats (12 points)</h3>
+            <div id="cc-stats" class="grid cols-3"></div>
+            <div class="row">
+              <span class="pill"><strong>Points</strong> <span id="cc-points">12</span></span>
+              <div class="spacer"></div>
+              <button class="btn good" id="cc-add">Add to Party</button>
+              <button class="btn" id="cc-new">Create a New Character</button>
+            </div>
+            <p class="tag">
+              Race bonuses apply on creation. Tap a stat to adjust. Stats use a compressed 10–60 scale and
+              provide multiple benefits (e.g., DEX affects speed, crit, and defense).
+            </p>
+          </div>
+          <div class="col">
+            <h3>Current Party <span class="tag" id="party-count">0 / 4</span></h3>
+            <div id="party-list" class="col"></div>
+            <div class="row">
+              <button class="btn" onclick="UI.goto('menu')">⬅ Back</button>
+              <div class="spacer"></div>
+              <button class="btn primary" onclick="UI.goto('town')">Enter Town</button>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <!-- Town -->
       <section id="screen-town" class="screen panel section">
@@ -150,9 +165,6 @@
         <div id="dlg-text" class="section" style="min-height:90px"></div>
         <div id="dlg-choices" class="choice-list"></div>
       </section>
-
-
-
 
       <!-- Combat -->
       <section id="screen-combat" class="screen panel section">
@@ -217,38 +229,34 @@
             <label class="row"><input type="checkbox" id="set-reduced"> Reduce Motion</label>
           </div>
           <div class="col">
-          <!-- ✅ New: Quick Game options (placeholders for now) -->
-<div class="panel section" id="settings-quick">
-  <h3>Game</h3>
-  <div class="choice-list">
-<button class="btn" id="set-online">Online Connect</button>
-<button class="btn" id="set-load">Load</button>
-<button class="btn warn" id="set-quit">Quit to Start</button>
-  </div>
-  <p class="tag">These options are placeholders for now; we’ll wire them up later.</p>
-</div>
+            <!-- Game options -->
+            <div class="panel section" id="settings-quick">
+              <h3>Game</h3>
+              <div class="choice-list">
+                <button class="btn" id="set-online">Online Connect</button>
+                <button class="btn" id="set-load">Load</button>
+                <button class="btn warn" id="set-quit">Quit to Start</button>
+              </div>
+              <p class="tag">These options are placeholders for now; we’ll wire them up later.</p>
+            </div>
 
-<div class="divider" style="margin:8px 0"></div>
+            <div class="divider" style="margin:8px 0"></div>
 
-
-<!-- Music controls -->
-<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">
-  <button class="btn small" id="music-toggle" type="button">Music: On</button>
-  <label class="row" style="gap:6px;align-items:center">
-    Music Volume
-    <input id="bgm-volume" type="range" min="0" max="1" step="0.05" value="0.7" style="width:180px">
-  </label>
-</div>
-
-<!-- NEW: SFX volume -->
-<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center; margin-top:6px">
-  <label class="row" style="gap:6px;align-items:center">
-    SFX Volume
-    <input id="sfx-volume" type="range" min="0" max="1" step="0.01" value="0.8" style="width:180px">
-  </label>
-</div>
-
-<p class="tag">SFX test buttons appear below.</p>
+            <!-- Music / SFX -->
+            <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">
+              <button class="btn small" id="music-toggle" type="button">Music: On</button>
+              <label class="row" style="gap:6px;align-items:center">
+                Music Volume
+                <input id="bgm-volume" type="range" min="0" max="1" step="0.05" value="0.7" style="width:180px">
+              </label>
+            </div>
+            <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center; margin-top:6px">
+              <label class="row" style="gap:6px;align-items:center">
+                SFX Volume
+                <input id="sfx-volume" type="range" min="0" max="1" step="0.01" value="0.8" style="width:180px">
+              </label>
+            </div>
+            <p class="tag">SFX test buttons appear below.</p>
 
             <h3>Appearance</h3>
             <label>Theme
@@ -267,7 +275,6 @@
           <button class="btn" onclick="UI.goto('menu')">⬅ Back</button>
         </div>
       </section>
-
     </div>
 
     <footer class="panel">
@@ -276,16 +283,15 @@
   </main>
 </div>
 
-<!-- DEV ONLY -->
-<script type="module" src="/dev/encounter-demo.js"></script>
+<!-- DEV ONLY: deterministic console helpers for presets/spawn tables -->
+<script type="module" src="./dev/encounter-demo.js"></script>
 
-<!-- BEGIN: Inline Media Manager (clean) -->
+<!-- BEGIN: Inline Media Manager -->
 <script>
 (function(){
   if (window.__LocationMediaInstalled) return;
   window.__LocationMediaInstalled = true;
 
-  // ===== LOCATION → image + music map =====
   window.LOCATION_MEDIA = {
     "Start":         { image: "Assets/Backgrounds/start.png",       music: ["Assets/Music/start song.mp3"] },
     "CreateParty":   { image: "Assets/Backgrounds/start.png",       music: ["Assets/Music/start song.mp3"] },
@@ -294,14 +300,12 @@
     "Market":        { image: "Assets/Backgrounds/market.png",      music: ["Assets/Music/market noise.mp3","Assets/Music/market song.mp3"] },
     "Wilderness":    { image: "Assets/Backgrounds/wilderness.png",  music: ["Assets/Music/wilderness.mp3","Assets/Music/woods.mp3"] },
     "Cave Entrance": { image: "Assets/Backgrounds/cave.png",        music: ["Assets/Music/cave music.mp3","Assets/Music/cave ambience.mp3"] },
-    "Settings":      { image: "Assets/Backgrounds/settings.png",        music: ["Assets/Music/ourlordisnotready.mp3"] },
-    "Inventory":    { image: "Assets/Backgrounds/inventorystats.png"},
-    "Sheet":    { image: "Assets/Backgrounds/inventorystats.png"},
-    "Menu":          { image: "Assets/Backgrounds/start.png",       music: ["Assets/Music/start song.mp3"] },
-  
-    };
+    "Settings":      { image: "Assets/Backgrounds/settings.png",    music: ["Assets/Music/ourlordisnotready.mp3"] },
+    "Inventory":     { image: "Assets/Backgrounds/inventorystats.png" },
+    "Sheet":         { image: "Assets/Backgrounds/inventorystats.png" },
+    "Menu":          { image: "Assets/Backgrounds/start.png",       music: ["Assets/Music/start song.mp3"] }
+  };
 
-  // -- hero panel under tabs --
   function ensureHero(){
     let el = document.getElementById('location-hero');
     if (!el){
@@ -310,13 +314,11 @@
       el.id = 'location-hero';
       el.className = 'panel hero';
       (tabbar || document.querySelector('main')).insertAdjacentElement('afterend', el);
-      // start collapsed until something sets an image
-el.classList.add('collapsed'); 
-  }
+      el.classList.add('collapsed'); 
+    }
     return el;
   }
 
-  // -- audio helpers --
   function hardStopAllAudioElements(){
     document.querySelectorAll('audio').forEach(a => {
       try { a.pause(); } catch {}
@@ -330,9 +332,7 @@ el.classList.add('collapsed');
     const v = parseFloat(localStorage.getItem('bgmVolume') || '0.7');
     return isNaN(v) ? 0.7 : Math.max(0, Math.min(1, v));
   }
-  function currentMuted(){
-    return localStorage.getItem('bgmMuted') === 'true';
-  }
+  function currentMuted(){ return localStorage.getItem('bgmMuted') === 'true'; }
   function installAutoplayUnblocker(){
     if (window.__mediaAutoplayUnblockerInstalled) return;
     window.__mediaAutoplayUnblockerInstalled = true;
@@ -361,27 +361,24 @@ el.classList.add('collapsed');
     });
   }
 
-  // -- public API --
   window.MediaManager = {
     setLocation(key){
-  const m = window.LOCATION_MEDIA[key] || {};
-  const hero = ensureHero();
+      const m = window.LOCATION_MEDIA[key] || {};
+      const hero = ensureHero();
 
-  if (m.image){
-    hero.classList.remove('collapsed');
-    hero.style.opacity = '0';
-    const img = `url('${encodeURI(m.image)}')`;
-    setTimeout(() => { hero.style.backgroundImage = img; hero.style.opacity = '1'; }, 60);
-  } else {
-    hero.style.backgroundImage = '';
-    hero.classList.add('collapsed');
-  }
+      if (m.image){
+        hero.classList.remove('collapsed');
+        hero.style.opacity = '0';
+        const img = `url('${encodeURI(m.image)}')`;
+        setTimeout(() => { hero.style.backgroundImage = img; hero.style.opacity = '1'; }, 60);
+      } else {
+        hero.style.backgroundImage = '';
+        hero.classList.add('collapsed');
+      }
 
-if (Object.prototype.hasOwnProperty.call(m, 'music')) {
-  setBgm(m.music);}
-  localStorage.setItem('lastLocation', key);
-},
-
+      if (Object.prototype.hasOwnProperty.call(m, 'music')) setBgm(m.music);
+      localStorage.setItem('lastLocation', key);
+    },
     setInitialMusic(srcOrList){
       if (localStorage.getItem('bgmMuted') == null) localStorage.setItem('bgmMuted','false');
       if (localStorage.getItem('bgmVolume') == null) localStorage.setItem('bgmVolume','0.7');
@@ -401,10 +398,12 @@ if (Object.prototype.hasOwnProperty.call(m, 'music')) {
   window.setLocationMedia = window.MediaManager.setLocation;
 })();
 </script>
-<!-- END: Inline Media Manager (clean) -->
+<!-- END: Inline Media Manager -->
 
-<!-- Then load your app as a module -->
+<!-- App entry (your modules import the aliases above as needed) -->
 <script type="module" src="./main.js"></script>
+
+<!-- Tab bar container (if used by UI.js) -->
 <div class="tabs panel" id="tabbar"></div>
 </body>
 </html>
