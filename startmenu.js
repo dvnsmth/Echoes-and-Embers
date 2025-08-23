@@ -1,8 +1,8 @@
 import { AudioManager } from './audio.js';
 import { State } from './state.js';
 import { Storage } from './storage.js';
-import { createCharacter } from './character.js';
-import { UI } from './ui.js';
+import { createCharacter } from './scripts/character/character.js';
+import { UI } from './scripts/ui/ui.js';
 
 export const StartMenu = {
   el:null,

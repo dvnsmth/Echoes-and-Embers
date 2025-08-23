@@ -1,18 +1,18 @@
 // === main.js (clean, single copy) ===
 
-import { UI, SettingsUI } from './ui.js';
-import { Settings } from './state.js';
-import { StartMenu } from './startmenu.js'; // <- make sure the file on disk is startmenu.js
-import { Scenes, Dialogue } from './scenes.js';
-import { Combat } from './combat.js';
-import { Sheet } from './sheet.js';
-import { AudioManager } from './audio.js';
-import { AudioSettings } from './audiosettings.js';
+import { UI, SettingsUI } from './ui/ui.js';
+import { Settings } from '../state.js';
+import { StartMenu } from '../startmenu.js'; // <- make sure the file on disk is startmenu.js
+import { Scenes, Dialogue } from '../scenes.js';
+import { Combat } from './combat/combat.js';
+import { Sheet } from '../sheet.js';
+import { AudioManager } from '../audio.js';
+import { AudioSettings } from '../audiosettings.js';
 // Encounter system (direct imports)
-import { rollPreset, DIFFICULTY } from './encounterPresets.js';
-import { buildEncounterFromTable } from './spawnTables.js';
-import { instantiateEncounter, collapseEncounter, xpForEncounter } from './encounters.js';
-import { State } from './state.js'; // you already import Settings; add State, too
+import { rollPreset, DIFFICULTY } from '../encounterPresets.js';
+import { buildEncounterFromTable } from './combat/spawnTables.js';
+import { instantiateEncounter, collapseEncounter, xpForEncounter } from '../encounters.js';
+import { State } from '../state.js'; // you already import Settings; add State, too
 
 Object.assign(window, { UI, SettingsUI, Scenes, Dialogue, Combat, Sheet, Settings, State, AudioManager });
 

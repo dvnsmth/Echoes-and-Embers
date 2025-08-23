@@ -3,8 +3,8 @@
 
 import { State, Notifier } from '../state.js';
 import { Storage } from '../storage.js';
-import { addGold } from '../party.js';
-import { grantXP } from '../character.js';
+import { addGold } from '../party/party.js';
+import { grantXP } from '../character/character.js';
 
 function ensureState() {
   if (!State.quests) State.quests = {};

@@ -1,7 +1,7 @@
 // /town/inn.js
 import { panelLog, actionsEl, btn, log } from './helpers.js';
 import { Notifier, State } from '../state.js';
-import { spendGold } from '../party.js';
+import { spendGold } from '../party/party.js';
 import { Storage } from '../storage.js';
 
 export function inn(){
@@ -14,7 +14,7 @@ export function inn(){
   acts.appendChild(btn('Hire a local (10g)', ()=>{
     if ((State.party?.length||0) >= 4) return Notifier.toast('Your party is full.');
     if (!spendGold(10)) return Notifier.toast('Not enough gold.');
-    import('../character.js').then(({ createCharacter })=>{
+    import('../character/character.js').then(({ createCharacter })=>{
       const hire = createCharacter({
         name:'Nia of the Vale', race:'Human', clazz:'Ranger', bg:'Scout',
         stats:{ STR:9, DEX:30, CON:8, INT:10, WIS:11, LCK:30 }

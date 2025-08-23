@@ -9,6 +9,6 @@ export const Scenes = { ...Town };
 
 // Optional: re-export Dialogue & Journal so callers can keep importing via scenes.js
 export { Dialogue } from './dialogue.js';
-export { openJournal } from './quests/journal.js';
+export { openJournal } from './scripts/quests/journal.js';
 
 // (No dev auto-starts here; use console helpers or UI buttons to trigger encounters)

@@ -1,8 +1,8 @@
 // quests/lostcanyon.js — example quest: Lost Canyon
-import { Dialogue } from '../dialogue.js';
+import { Dialogue } from '../../dialogue.js';
 import { Notifier } from '../state.js';
 import { Combat } from '../combat.js';
-import { addItem } from '../inventory.js';
+import { addItem } from '../../inventory.js';
 import { startQuest, setStage, completeQuest, getQuest } from './core.js';
 
 export const LOST_CANYON_ID = 'Q_LOST_CANYON';
