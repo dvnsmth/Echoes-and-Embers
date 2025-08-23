@@ -1,9 +1,11 @@
 import { Notifier, State } from './state.js';
-import { addItem, addGold, grantXP, calcMod } from './character.js';
-import { Utils } from './utils.js';
-import { DB } from './db.js';
+import { grantXP, } from './character.js';
+import {addGold, spendGold} from './party.js';
+import { Utils, calcMod } from './utils.js';
 import { Combat } from './combat.js';
 import { Storage } from './storage.js';
+import { addItem } from './inventory.js';
+
 
 function btn(label,fn){ const b=document.createElement('button'); b.className='btn'; b.textContent=label; b.onclick=fn; return b; }
 
@@ -84,11 +86,10 @@ export const Scenes = {
     const acts = actionsEl();
     acts.appendChild(btn('Ask for rumors',()=>log(out,'Merren: “Bandits avoid the cave lately. Says the goblins parley with a masked one.”')));
     acts.appendChild(btn('Hire a local (10g)',()=>{
-      if(State.party.length>=4) return Notifier.toast('Party full.');
-      if(State.gold<10) return Notifier.toast('Not enough gold.');
-      State.gold-=10;
+      if(State.party.length>=4) return Notifier.toast('Your party is full.');
+      if(!spendGold(10)) return Notifier.toast('Not enough gold.');
       import('./character.js').then(({createCharacter})=>{
-        const hire = createCharacter({name:'Nia of the Vale', race:'Human', clazz:'Ranger', bg:'Scout', stats:{STR:9,DEX:13,CON:9,INT:10,WIS:11,CHA:9}});
+        const hire = createCharacter({name:'Nia of the Vale', race:'Human', clazz:'Ranger', bg:'Scout', stats:{STR:9,DEX:30,CON:8,INT:10,WIS:11,LCK:30}});
         State.party.push(hire); Notifier.refresh();
         log(out,'Nia joins your cause. “I know the deer tracks to the cave.”');
         Storage.save();
@@ -102,8 +103,8 @@ export const Scenes = {
 
     panelLog('Stalls offer herbs and ironmongery. A traveling tinker smiles.', true);
     const acts = actionsEl();
-    acts.appendChild(btn('Buy Minor Tonic (5g)',()=>{ if(State.gold<5) return Notifier.toast('Not enough gold'); State.gold-=5; addItem('Minor Tonic',1); Storage.save();}));
-    acts.appendChild(btn('Sell trinkets (+3g)',()=>{ addGold(3); Storage.save(); }));
+    acts.appendChild(btn('Buy Minor Tonic (5g)',()=>{ if(!spendGold(5)) return Notifier.toast('Not enough gold'); addItem('Minor Tonic',1); Storage.save(); }));
+    acts.appendChild(btn('Sell trinkets (+30g)',()=>{ addGold(30); Storage.save(); }));
   },
 
   gate(){
