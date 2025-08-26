@@ -99,8 +99,8 @@
         <h2>Welcome, traveler.</h2>
         <p class="tag">Create your party (up to 4), meet an NPC, and take on your first quest in the Vale.</p>
         <div class="choice-list">
-          <button class="btn primary" onclick="UI.goto('create')">🧙 Create / Manage Party</button>
-          <button class="btn" onclick="UI.goto('town')">🏘️ Enter Thornbridge (Town)</button>
+          <button class="btn primary" id="btnCreateParty">🧙 Create / Manage Party</button>
+          <button class="btn" id="btnEnterTown">🏘️ Enter Thornbridge (Town)</button>
         </div>
       </section>
 
@@ -285,7 +285,6 @@
   </main>
 </div>
 
-
 <!-- BEGIN: Inline Media Manager (bg images + music) -->
 <script>
 (function(){
@@ -293,17 +292,17 @@
   window.__LocationMediaInstalled = true;
 
   window.LOCATION_MEDIA = {
-    "Start":         { image: "Assets/Backgrounds/start.png",       music: ["Assets/Music/start song.mp3"] },
-    "CreateParty":   { image: "Assets/Backgrounds/start.png",       music: ["Assets/Music/start song.mp3"] },
-    "Town Square":   { image: "Assets/Backgrounds/town_square.png", music: ["Assets/Music/town square.mp3"] },
-    "Inn":           { image: "Assets/Backgrounds/inn.png",         music: ["Assets/Music/inn fire.mp3","Assets/Music/inn noise.mp3"] },
-    "Market":        { image: "Assets/Backgrounds/market.png",      music: ["Assets/Music/market noise.mp3","Assets/Music/market song.mp3"] },
-    "Wilderness":    { image: "Assets/Backgrounds/wilderness.png",  music: ["Assets/Music/wilderness.mp3","Assets/Music/woods.mp3"] },
-    "Cave Entrance": { image: "Assets/Backgrounds/cave.png",        music: ["Assets/Music/cave music.mp3","Assets/Music/cave ambience.mp3"] },
-    "Settings":      { image: "Assets/Backgrounds/settings.png",    music: ["Assets/Music/ourlordisnotready.mp3"] },
-    "Inventory":     { image: "Assets/Backgrounds/inventorystats.png" },
-    "Sheet":         { image: "Assets/Backgrounds/inventorystats.png" },
-    "Menu":          { image: "Assets/Backgrounds/start.png",       music: ["Assets/Music/start song.mp3"] }
+  "Start":         { image: "Assets/images/Backgrounds/start.png",       music: ["Assets/audio/Music/start song.mp3"] },
+  "CreateParty":   { image: "Assets/images/Backgrounds/start.png",       music: ["Assets/audio/Music/start song.mp3"] },
+  "Town Square":   { image: "Assets/images/Backgrounds/town_square.png", music: ["Assets/audio/Music/town square.mp3"] },
+  "Inn":           { image: "Assets/images/Backgrounds/inn.png",         music: ["Assets/audio/Music/inn fire.mp3","Assets/audio/Music/inn noise.mp3"] },
+  "Market":        { image: "Assets/images/Backgrounds/market.png",      music: ["Assets/audio/Music/market noise.mp3","Assets/audio/Music/market song.mp3"] },
+  "Wilderness":    { image: "Assets/images/Backgrounds/wilderness.png",  music: ["Assets/audio/Music/wilderness.mp3","Assets/audio/Music/woods.mp3"] },
+  "Cave Entrance": { image: "Assets/images/Backgrounds/cave.png",        music: ["Assets/audio/Music/cave music.mp3","Assets/audio/Music/cave ambience.mp3"] },
+  "Settings":      { image: "Assets/images/Backgrounds/settings.png",    music: ["Assets/audio/Music/ourlordisnotready.mp3"] },
+  "Inventory":     { image: "Assets/images/Backgrounds/inventorystats.png" },
+  "Sheet":         { image: "Assets/images/Backgrounds/inventorystats.png" },
+  "Menu":          { image: "Assets/images/Backgrounds/start.png",       music: ["Assets/audio/Music/start song.mp3"] }
   };
 
   function ensureHero(){
@@ -382,7 +381,7 @@
     setInitialMusic(srcOrList){
       if (localStorage.getItem('bgmMuted') == null) localStorage.setItem('bgmMuted','false');
       if (localStorage.getItem('bgmVolume') == null) localStorage.setItem('bgmVolume','0.7');
-      setBgm(srcOrList || ["Assets/Music/start song.mp3"]);
+  setBgm(srcOrList || ["Assets/audio/Music/start song.mp3"]);
     },
     mute(flag){
       localStorage.setItem('bgmMuted', String(!!flag));

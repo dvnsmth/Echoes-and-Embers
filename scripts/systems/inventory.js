@@ -1,5 +1,5 @@
 // /scripts/systems/inventory.js
-// Data-driven inventory with ID + name support and simple buy/sell.
+// Data-driven inventory with ID + name support and simple buy/sell + use.
 // Safe to call from Market/Blacksmith/Quests/UI.
 
 import { State, Notifier } from "systems/state.js";
@@ -33,8 +33,19 @@ const NAME_INDEX = (() => {
 
 // ---------- internals ----------
 function ensureStore() {
-  // We keep array-of-entries for compatibility: [{ name, qty, meta }]
-  if (!Array.isArray(State.inventory)) State.inventory = [];
+  // Inventory shape migration:
+  // - old: { "minor_tonic": 2, "Iron Sword": 1 }
+  // - new: [ { name:"minor_tonic", qty:2 }, { name:"iron_sword", qty:1 } ]
+  const inv = State.inventory;
+  if (Array.isArray(inv)) return inv;
+  if (inv && typeof inv === "object") {
+    State.inventory = Object.entries(inv).map(([name, qty]) => {
+      const id = NAME_INDEX.toId(name) || String(name);
+      return { name: id, qty: Number(qty) || 0 };
+    }).filter(e => e.qty > 0);
+  } else {
+    State.inventory = [];
+  }
   return State.inventory;
 }
 function saveRefresh() { Storage?.save?.(); Notifier?.refresh?.(); }
@@ -53,7 +64,6 @@ export function getItemData(idOrName) {
 export function priceOf(idOrName, kind = "buy") {
   const rec = getItemData(idOrName);
   if (!rec) return kind === "sell" ? 0 : Infinity;
-  // You can enrich with rarity-based pricing later
   if (kind === "sell") return Math.floor((rec.price ?? 0) * 0.5);
   return Number.isFinite(rec.price) ? rec.price : Infinity;
 }
@@ -64,7 +74,7 @@ export function listInventory() {
   return inv.map(e => {
     const id = NAME_INDEX.toId(e.name) || e.name;
     return { id, qty: e.qty | 0, data: getItemData(id) };
-  });
+  }).sort((a,b) => (a.data?.name || a.id).localeCompare(b.data?.name || b.id));
 }
 export function getQty(idOrName) {
   const inv = ensureStore();
@@ -89,8 +99,7 @@ export function addItem(idOrName, qty = 1, meta = null) {
   const ent = findEntry(inv, id);
   if (ent) {
     ent.qty = (ent.qty | 0) + Math.max(1, qty | 0);
-    // migrate legacy display-name entry to ID for consistency
-    ent.name = id;
+    ent.name = id; // migrate legacy display-name entry to ID
     if (meta) ent.meta = meta;
   } else {
     inv.push({ name: id, qty: Math.max(1, qty | 0), meta });
@@ -112,10 +121,51 @@ export function removeItem(idOrName, qty = 1) {
   ent.qty -= take;
   if ((ent.qty | 0) <= 0) {
     const idx = ensureStore().indexOf(ent);
-    if (idx >= 0) inv.splice(idx, 1);
+    if (idx >= 0) State.inventory.splice(idx, 1);
   }
   saveRefresh();
   return { ok: true, qty: getQty(id) };
+}
+
+// ---------- using consumables ----------
+export function useItem(idOrName, targetIndex = 0) {
+  const id = NAME_INDEX.toId(idOrName);
+  const rec = id && getItemData(id);
+  if (!rec)                       return { ok:false, reason:"unknown-item" };
+  if (rec.type !== "consumable")  return { ok:false, reason:"not-consumable" };
+  if (getQty(id) <= 0)            return { ok:false, reason:"none-left" };
+
+  let applied = false;
+
+  // heal effect
+  if (rec.effect?.heal) {
+    const party = State.party || [];
+    const idx = Math.max(0, Math.min(targetIndex | 0, party.length - 1));
+    const c = party[idx];
+    if (!c) return { ok:false, reason:"no-target" };
+    const max = c.maxHP ?? c.maxhp ?? c.hp ?? 10;
+    c.maxHP = max;
+    const before = c.hp ?? max;
+    c.hp = Math.min(max, before + Number(rec.effect.heal));
+    applied = true;
+  }
+
+  // light buff (flag)
+  if (rec.effect?.light) {
+    State.flags = State.flags || {};
+    State.flags.light = true;
+    applied = true;
+  }
+
+  // Consume 1 regardless once used
+  const removed = removeItem(id, 1);
+  if (!removed.ok) return removed;
+
+  if (applied) {
+    Notifier?.toast?.(`${rec.icon ?? "🎒"} Used ${rec.name}.`);
+  }
+  saveRefresh();
+  return { ok:true, item:id, data:rec };
 }
 
 // ---------- market helpers ----------
@@ -172,5 +222,5 @@ export { ItemDB };
 export default {
   addItem, removeItem, getQty, hasItem, inventoryValue,
   list, listInventory, getItemData, priceOf,
-  buyItem, sellItem, compact, ItemDB
+  buyItem, sellItem, useItem, compact, ItemDB
 };

@@ -39,12 +39,12 @@ Object.assign(window, { UI, StartMenu, State, Storage, Combat, DIFFICULTY });
 
 // --- SFX bootstrap (optional-chained in case your AudioManager is minimal) ---
 const SFX_MAP = {
-  select:  "Assets/SFX/computer click.mp3",
-  hit:     "Assets/SFX/sword hit.mp3",
-  heal:    "Assets/SFX/healing.mp3",
-  victory: "Assets/SFX/victory.mp3",
-  defeat:  "Assets/SFX/game over.mp3",
-  item:    "Assets/SFX/potion use.mp3",
+  select:  "Assets/audio/SFX/computer click.mp3",
+  hit:     "Assets/audio/SFX/sword hit.mp3",
+  heal:    "Assets/audio/SFX/healing.mp3",
+  victory: "Assets/audio/SFX/victory.mp3",
+  defeat:  "Assets/audio/SFX/game over.mp3",
+  item:    "Assets/audio/SFX/potion use.mp3",
 };
 
 const LS_KEYS = { sfxVolume: "sfxVolume" };
@@ -179,7 +179,7 @@ window.addEventListener("DOMContentLoaded", () => {
   StartMenu?.init?.();
 
   // Initial music (see MediaManager in index.html)
-  try { MediaManager?.setInitialMusic?.(["Assets/Music/start song.mp3"]); } catch {}
+  try { MediaManager?.setInitialMusic?.(["Assets/audio/Music/start song.mp3"]); } catch {}
 
   // Audio
   initSfx();
@@ -189,17 +189,16 @@ window.addEventListener("DOMContentLoaded", () => {
   renderPrebattle([]);
 
   // Replace inline UI.goto handlers with event listeners
-  const btnCreate = document.querySelector("button.btn.primary[onclick*='UI.goto(\'create\')']");
+  // Wire up event listeners for Create/Manage Party and Enter Town buttons
+  const btnCreate = document.getElementById("btnCreateParty");
   if (btnCreate) btnCreate.onclick = () => UI.goto('create');
-  const btnTown = document.querySelector("button.btn[onclick*='UI.goto(\'town\')']");
+  const btnTown = document.getElementById("btnEnterTown");
   if (btnTown) btnTown.onclick = () => UI.goto('town');
 
   // Journal hotkey
+  
   const btnJ = document.getElementById("btnJournal");
   if (btnJ) btnJ.onclick = () => openJournal();
-  document.addEventListener("keydown", (e) => {
-    if ((e.key || "").toLowerCase() === "j") openJournal();
-  });
 
   // Initial hero art
   try { setLocationMedia?.("Start"); } catch {}
