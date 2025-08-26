@@ -1,0 +1,19 @@
+town/
+
+Owns: Stonefall hub systems:
+
+Building definitions and upgrade costs
+
+Shop catalogs unlocked by buildings
+
+Town level/state and NPC unlocks
+Exposes:
+
+Query/upgrade buildings
+
+Get shop inventories & prices (based on town state)
+
+Town progression checks (what’s available)
+Depends on: core (state/events), data (buildings, shops), party (gold), inventory (transactions).
+Must not depend on: ui, combat.
+Why: Keeps progression/economy logic independent from rendering.

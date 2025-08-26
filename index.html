@@ -5,6 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Echoes and Embers – RPG (Vertical Slice)</title>
   <link rel="stylesheet" href="./styles.css">
+
+  <!-- ES Module import map for clean paths -->
+  <script type="importmap">
+  {
+    "imports": {
+      "data/":    "./scripts/data/",
+      "systems/": "./scripts/systems/",
+      "town/":    "./scripts/town/",
+      "quests/":  "./scripts/quests/",
+      "ui/":      "./scripts/ui/",
+      "dev/":     "./scripts/dev/",
+      "town":     "./scripts/town/index.js"
+    }
+  }
+  </script>
 </head>
 <body>
 <div id="app">
@@ -13,14 +28,17 @@
     <h1>Echoes and Embers</h1>
     <div class="spacer"></div>
 
-<!-- ✅ New: Settings button in the top-right banner -->
-  <button class="btn small" id="btnSettings">Settings</button>
+    <!-- Quick access -->
+    <button class="btn small" onclick="UI?.goto?.('inventory')">Inventory</button>
+    <button class="btn small" onclick="UI?.goto?.('sheet')">Characters</button>
+    <button class="btn small" onclick="openJournal()">Journal</button>
 
-  <!-- Existing -->
-  <button class="btn small" id="btnSave">Save</button>
-  <button class="btn small" id="btnLoad">Load</button>
-  <button class="btn small" id="btnReset">Reset</button>
-</header>
+    <!-- Settings & system -->
+    <button class="btn small" id="btnSettings">Settings</button>
+    <button class="btn small" id="btnSave">Save</button>
+    <button class="btn small" id="btnLoad">Load</button>
+    <button class="btn small" id="btnReset">Reset</button>
+  </header>
 
   <!-- Start Menu Overlay -->
   <div id="start-overlay" class="is-hidden" aria-hidden="true" role="dialog" aria-label="Start Menu">
@@ -73,8 +91,7 @@
   </div>
 
   <main>
-   
-<div id="location-hero" class="panel hero" aria-label="Location art"></div>
+    <div id="location-hero" class="panel hero" aria-label="Location art"></div>
 
     <div id="screen-container" class="col">
       <!-- Main Menu -->
@@ -82,8 +99,8 @@
         <h2>Welcome, traveler.</h2>
         <p class="tag">Create your party (up to 4), meet an NPC, and take on your first quest in the Vale.</p>
         <div class="choice-list">
-          <button class="btn primary" onclick="UI.goto('create')">🧙 Create / Manage Party</button>
-          <button class="btn" onclick="UI.goto('town')">🏘️ Enter Thornbridge (Town)</button>
+          <button class="btn primary" id="btnCreateParty">🧙 Create / Manage Party</button>
+          <button class="btn" id="btnEnterTown">🏘️ Enter Thornbridge (Town)</button>
         </div>
       </section>
 
@@ -100,15 +117,18 @@
               <label>Background<input id="cc-bg" placeholder="(optional)"></label>
             </div>
             <div class="divider"></div>
-            <h3>Allocate Stats (27 points)</h3>
+            <h3>Allocate Stats (12 points)</h3>
             <div id="cc-stats" class="grid cols-3"></div>
             <div class="row">
-              <span class="pill"><strong>Points</strong> <span id="cc-points">27</span></span>
+              <span class="pill"><strong>Points</strong> <span id="cc-points">12</span></span>
               <div class="spacer"></div>
               <button class="btn good" id="cc-add">Add to Party</button>
               <button class="btn" id="cc-new">Create a New Character</button>
             </div>
-            <p class="tag">Race bonuses apply on creation. Tap a stat to adjust.</p>
+            <p class="tag">
+              Race bonuses apply on creation. Tap a stat to adjust. Stats use a compressed 10–60 scale and
+              provide multiple benefits (e.g., DEX affects speed, crit, and defense).
+            </p>
           </div>
           <div class="col">
             <h3>Current Party <span class="tag" id="party-count">0 / 4</span></h3>
@@ -127,11 +147,12 @@
         <h2>Thornbridge</h2>
         <p class="tag">A quiet frontier village at the edge of the Hollow Vale. Smoke curls from thatch roofs; wary eyes watch the woods.</p>
         <div class="choice-list">
-          <button class="btn" onclick="Scenes.townSquare()">🏛️ Town Square</button>
-          <button class="btn" onclick="Scenes.inn()">🍺 The Fir & Finch Inn</button>
-          <button class="btn" onclick="Scenes.market()">🧺 Market Stalls</button>
-          <button class="btn" onclick="Scenes.gate()">🌲 Vale Gate (Wilderness)</button>
-          <button class="btn warn" onclick="Scenes.caveEntrance()">🕳️ Hollowroot Cave</button>
+          <button class="btn" onclick="townSquare()">🏛️ Town Square</button>
+          <button class="btn" onclick="inn()">🍺 The Fir & Finch Inn</button>
+          <button class="btn" onclick="market()">🧺 Market Stalls</button>
+          <button class="btn" onclick="gate()">🌲 Vale Gate (Wilderness)</button>
+          <button class="btn" onclick="blacksmith()">⚒️ Blacksmith</button>
+          <button class="btn" onclick="openJournal()">📜 Quest Journal</button>
           <button class="btn" onclick="UI.goto('menu')">⬅ Main Menu</button>
         </div>
         <div id="town-output" class="log panel"></div>
@@ -152,7 +173,7 @@
         <div class="row" style="align-items:center;gap:10px">
           <h2>⚔️ Battle</h2>
           <div class="pill" id="turn-indicator" title="Current turn" style="margin-left:6px">—</div>
-          <div class="pill" id="round-tracker" title="Round / Turn" style="margin-left:6px">—</div>
+          <div class="pill" id="round-tracker" title="Turns elapsed" style="margin-left:6px">—</div>
           <div class="spacer"></div>
           <button class="btn small" onclick="Combat.tryFlee()">🏃 Attempt Flee</button>
         </div>
@@ -210,38 +231,34 @@
             <label class="row"><input type="checkbox" id="set-reduced"> Reduce Motion</label>
           </div>
           <div class="col">
-          <!-- ✅ New: Quick Game options (placeholders for now) -->
-<div class="panel section" id="settings-quick">
-  <h3>Game</h3>
-  <div class="choice-list">
-<button class="btn" id="set-online">Online Connect</button>
-<button class="btn" id="set-load">Load</button>
-<button class="btn warn" id="set-quit">Quit to Start</button>
-  </div>
-  <p class="tag">These options are placeholders for now; we’ll wire them up later.</p>
-</div>
+            <!-- Game options -->
+            <div class="panel section" id="settings-quick">
+              <h3>Game</h3>
+              <div class="choice-list">
+                <button class="btn" id="set-online">Online Connect</button>
+                <button class="btn" id="set-load">Load</button>
+                <button class="btn warn" id="set-quit">Quit to Start</button>
+              </div>
+              <p class="tag">These options are placeholders for now; we’ll wire them up later.</p>
+            </div>
 
-<div class="divider" style="margin:8px 0"></div>
+            <div class="divider" style="margin:8px 0"></div>
 
-
-<!-- Music controls -->
-<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">
-  <button class="btn small" id="music-toggle" type="button">Music: On</button>
-  <label class="row" style="gap:6px;align-items:center">
-    Music Volume
-    <input id="bgm-volume" type="range" min="0" max="1" step="0.05" value="0.7" style="width:180px">
-  </label>
-</div>
-
-<!-- NEW: SFX volume -->
-<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center; margin-top:6px">
-  <label class="row" style="gap:6px;align-items:center">
-    SFX Volume
-    <input id="sfx-volume" type="range" min="0" max="1" step="0.01" value="0.8" style="width:180px">
-  </label>
-</div>
-
-<p class="tag">SFX test buttons appear below.</p>
+            <!-- Music / SFX -->
+            <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">
+              <button class="btn small" id="music-toggle" type="button">Music: On</button>
+              <label class="row" style="gap:6px;align-items:center">
+                Music Volume
+                <input id="bgm-volume" type="range" min="0" max="1" step="0.05" value="0.7" style="width:180px">
+              </label>
+            </div>
+            <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center; margin-top:6px">
+              <label class="row" style="gap:6px;align-items:center">
+                SFX Volume
+                <input id="sfx-volume" type="range" min="0" max="1" step="0.01" value="0.8" style="width:180px">
+              </label>
+            </div>
+            <p class="tag">SFX test buttons appear below.</p>
 
             <h3>Appearance</h3>
             <label>Theme
@@ -260,7 +277,6 @@
           <button class="btn" onclick="UI.goto('menu')">⬅ Back</button>
         </div>
       </section>
-
     </div>
 
     <footer class="panel">
@@ -269,29 +285,26 @@
   </main>
 </div>
 
-<!-- BEGIN: Inline Media Manager (clean) -->
+<!-- BEGIN: Inline Media Manager (bg images + music) -->
 <script>
 (function(){
   if (window.__LocationMediaInstalled) return;
   window.__LocationMediaInstalled = true;
 
-  // ===== LOCATION → image + music map =====
   window.LOCATION_MEDIA = {
-    "Start":         { image: "Assets/Backgrounds/start.png",       music: ["Assets/Music/start song.mp3"] },
-    "CreateParty":   { image: "Assets/Backgrounds/start.png",       music: ["Assets/Music/start song.mp3"] },
-    "Town Square":   { image: "Assets/Backgrounds/town_square.png", music: ["Assets/Music/town square.mp3"] },
-    "Inn":           { image: "Assets/Backgrounds/inn.png",         music: ["Assets/Music/inn fire.mp3","Assets/Music/inn noise.mp3"] },
-    "Market":        { image: "Assets/Backgrounds/market.png",      music: ["Assets/Music/market noise.mp3","Assets/Music/market song.mp3"] },
-    "Wilderness":    { image: "Assets/Backgrounds/wilderness.png",  music: ["Assets/Music/wilderness.mp3","Assets/Music/woods.mp3"] },
-    "Cave Entrance": { image: "Assets/Backgrounds/cave.png",        music: ["Assets/Music/cave music.mp3","Assets/Music/cave ambience.mp3"] },
-    "Settings":      { image: "Assets/Backgrounds/settings.png",        music: ["Assets/Music/ourlordisnotready.mp3"] },
-    "Inventory":    { image: "Assets/Backgrounds/inventorystats.png"},
-    "Sheet":    { image: "Assets/Backgrounds/inventorystats.png"},
-    "Menu":          { image: "Assets/Backgrounds/start.png",       music: ["Assets/Music/start song.mp3"] },
-  
-    };
+  "Start":         { image: "Assets/images/Backgrounds/start.png",       music: ["Assets/audio/Music/start song.mp3"] },
+  "CreateParty":   { image: "Assets/images/Backgrounds/start.png",       music: ["Assets/audio/Music/start song.mp3"] },
+  "Town Square":   { image: "Assets/images/Backgrounds/town_square.png", music: ["Assets/audio/Music/town square.mp3"] },
+  "Inn":           { image: "Assets/images/Backgrounds/inn.png",         music: ["Assets/audio/Music/inn fire.mp3","Assets/audio/Music/inn noise.mp3"] },
+  "Market":        { image: "Assets/images/Backgrounds/market.png",      music: ["Assets/audio/Music/market noise.mp3","Assets/audio/Music/market song.mp3"] },
+  "Wilderness":    { image: "Assets/images/Backgrounds/wilderness.png",  music: ["Assets/audio/Music/wilderness.mp3","Assets/audio/Music/woods.mp3"] },
+  "Cave Entrance": { image: "Assets/images/Backgrounds/cave.png",        music: ["Assets/audio/Music/cave music.mp3","Assets/audio/Music/cave ambience.mp3"] },
+  "Settings":      { image: "Assets/images/Backgrounds/settings.png",    music: ["Assets/audio/Music/ourlordisnotready.mp3"] },
+  "Inventory":     { image: "Assets/images/Backgrounds/inventorystats.png" },
+  "Sheet":         { image: "Assets/images/Backgrounds/inventorystats.png" },
+  "Menu":          { image: "Assets/images/Backgrounds/start.png",       music: ["Assets/audio/Music/start song.mp3"] }
+  };
 
-  // -- hero panel under tabs --
   function ensureHero(){
     let el = document.getElementById('location-hero');
     if (!el){
@@ -300,13 +313,11 @@
       el.id = 'location-hero';
       el.className = 'panel hero';
       (tabbar || document.querySelector('main')).insertAdjacentElement('afterend', el);
-      // start collapsed until something sets an image
-el.classList.add('collapsed'); 
-  }
+      el.classList.add('collapsed'); 
+    }
     return el;
   }
 
-  // -- audio helpers --
   function hardStopAllAudioElements(){
     document.querySelectorAll('audio').forEach(a => {
       try { a.pause(); } catch {}
@@ -320,9 +331,7 @@ el.classList.add('collapsed');
     const v = parseFloat(localStorage.getItem('bgmVolume') || '0.7');
     return isNaN(v) ? 0.7 : Math.max(0, Math.min(1, v));
   }
-  function currentMuted(){
-    return localStorage.getItem('bgmMuted') === 'true';
-  }
+  function currentMuted(){ return localStorage.getItem('bgmMuted') === 'true'; }
   function installAutoplayUnblocker(){
     if (window.__mediaAutoplayUnblockerInstalled) return;
     window.__mediaAutoplayUnblockerInstalled = true;
@@ -351,31 +360,28 @@ el.classList.add('collapsed');
     });
   }
 
-  // -- public API --
   window.MediaManager = {
     setLocation(key){
-  const m = window.LOCATION_MEDIA[key] || {};
-  const hero = ensureHero();
+      const m = window.LOCATION_MEDIA[key] || {};
+      const hero = ensureHero();
 
-  if (m.image){
-    hero.classList.remove('collapsed');
-    hero.style.opacity = '0';
-    const img = `url('${encodeURI(m.image)}')`;
-    setTimeout(() => { hero.style.backgroundImage = img; hero.style.opacity = '1'; }, 60);
-  } else {
-    hero.style.backgroundImage = '';
-    hero.classList.add('collapsed');
-  }
+      if (m.image){
+        hero.classList.remove('collapsed');
+        hero.style.opacity = '0';
+        const img = `url('${encodeURI(m.image)}')`;
+        setTimeout(() => { hero.style.backgroundImage = img; hero.style.opacity = '1'; }, 60);
+      } else {
+        hero.style.backgroundImage = '';
+        hero.classList.add('collapsed');
+      }
 
-if (Object.prototype.hasOwnProperty.call(m, 'music')) {
-  setBgm(m.music);}
-  localStorage.setItem('lastLocation', key);
-},
-
+      if (Object.prototype.hasOwnProperty.call(m, 'music')) setBgm(m.music);
+      localStorage.setItem('lastLocation', key);
+    },
     setInitialMusic(srcOrList){
       if (localStorage.getItem('bgmMuted') == null) localStorage.setItem('bgmMuted','false');
       if (localStorage.getItem('bgmVolume') == null) localStorage.setItem('bgmVolume','0.7');
-      setBgm(srcOrList || ["Assets/Music/start song.mp3"]);
+  setBgm(srcOrList || ["Assets/audio/Music/start song.mp3"]);
     },
     mute(flag){
       localStorage.setItem('bgmMuted', String(!!flag));
@@ -391,10 +397,12 @@ if (Object.prototype.hasOwnProperty.call(m, 'music')) {
   window.setLocationMedia = window.MediaManager.setLocation;
 })();
 </script>
-<!-- END: Inline Media Manager (clean) -->
+<!-- END: Inline Media Manager -->
 
-<!-- Then load your app as a module -->
-<script type="module" src="./main.js"></script>
+<!-- App entry (module) -->
+<script type="module" src="./scripts/main.js"></script>
+
+<!-- Tab bar container (if used by UI.js) -->
 <div class="tabs panel" id="tabbar"></div>
 </body>
 </html>

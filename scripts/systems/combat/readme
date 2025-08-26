@@ -1,0 +1,19 @@
+combat/
+
+Owns: Encounter lifecycle and turn system:
+
+Initiative/ATB, turn start/end
+
+Action resolution (attack, skill, item, flee)
+
+Status effect ticking and cooldowns
+Exposes:
+
+Start/stop encounter
+
+Query battlefield state
+
+Apply action (by ID) and return results
+Depends on: core (events/state/constants), character, inventory, skills, data (enemies, loot tables).
+Must not depend on: ui, town.
+Why: Allows a headless combat sim; UI is just a viewer/controller.
