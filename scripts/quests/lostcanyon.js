@@ -1,5 +1,5 @@
 // quests/lostcanyon.js — example quest: Lost Canyon
-import { Dialogue } from '../../dialogue.js';
+import { Dialogue } from '../ui/dialogue.js';
 import { Notifier } from '../state.js';
 import { Combat } from '../combat.js';
 import { addItem } from '../../inventory.js';

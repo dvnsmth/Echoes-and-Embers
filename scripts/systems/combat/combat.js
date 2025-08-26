@@ -1,9 +1,9 @@
 // combat.js — ATB + AP hybrid loop
 import { State, Notifier } from './state.js';
-import { DB } from '../../db.js';
+import { DB } from '../../../db.js';
 import { Utils } from './utils.js';
-import { grantXP } from '../character/character.js';
-import { addGold } from '../party/party.js';
+import { grantXP } from '../character.js';
+import { addGold } from '../../party/party.js';
 import { Storage } from './storage.js';
 import { AudioManager } from '../../audio.js';
 
@@ -16,7 +16,7 @@ import {
   magicalDamage,
   BASE_AP_PER_TURN,
   AP_CARRY_CAP_DEFAULT,
-} from '../data/stats.js';
+} from '../../data/stats.js';
 import { ATBController } from '../../atb.js';
 
 // ---------- small UI helpers ----------

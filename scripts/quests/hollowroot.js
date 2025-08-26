@@ -1,5 +1,5 @@
 // quests/hollowroot.js
-import { Dialogue } from '../../dialogue.js';
+import { Dialogue } from '../ui/dialogue.js';
 import { addItem } from '../../inventory.js';
 import { Utils, calcMod } from '../utils.js';
 import { State, Notifier } from '../state.js';

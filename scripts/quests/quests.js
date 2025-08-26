@@ -2,6 +2,8 @@
 import { QuestCore, getQuest, startQuest, setStage, completeQuest, listActive, isActive } from './core.js';
 import HollowrootQuest, { HOLLOWROOT_ID } from './hollowroot.js';
 import LostCanyonQuest, { LOST_CANYON_ID } from './lostcanyon.js';
+import { Dialogue } from "ui/dialogue.js";
+
 
 export const QUESTS = {
   [HOLLOWROOT_ID]: HollowrootQuest,

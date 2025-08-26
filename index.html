@@ -6,17 +6,17 @@
   <title>Echoes and Embers – RPG (Vertical Slice)</title>
   <link rel="stylesheet" href="./styles.css">
 
-  <!-- Optional: Import Map for clean module aliases (direct-import architecture) -->
+  <!-- ES Module import map for clean paths -->
   <script type="importmap">
   {
     "imports": {
-      "data/races": "./race.js",
-      "data/classes": "./class.js",
-      "data/skills": "./skills.js",
-      "data/enemies": "./enemies.js",
-      "systems/encounters": "./encounters.js",
-      "systems/presets": "./encounterPresets.js",
-      "systems/spawn": "./spawnTables.js"
+      "data/":    "./scripts/data/",
+      "systems/": "./scripts/systems/",
+      "town/":    "./scripts/town/",
+      "quests/":  "./scripts/quests/",
+      "ui/":      "./scripts/ui/",
+      "dev/":     "./scripts/dev/",
+      "town":     "./scripts/town/index.js"
     }
   }
   </script>
@@ -28,9 +28,10 @@
     <h1>Echoes and Embers</h1>
     <div class="spacer"></div>
 
-    <!-- Quick access (new) -->
+    <!-- Quick access -->
     <button class="btn small" onclick="UI?.goto?.('inventory')">Inventory</button>
     <button class="btn small" onclick="UI?.goto?.('sheet')">Characters</button>
+    <button class="btn small" onclick="openJournal()">Journal</button>
 
     <!-- Settings & system -->
     <button class="btn small" id="btnSettings">Settings</button>
@@ -146,11 +147,12 @@
         <h2>Thornbridge</h2>
         <p class="tag">A quiet frontier village at the edge of the Hollow Vale. Smoke curls from thatch roofs; wary eyes watch the woods.</p>
         <div class="choice-list">
-          <button class="btn" onclick="Scenes.townSquare()">🏛️ Town Square</button>
-          <button class="btn" onclick="Scenes.inn()">🍺 The Fir & Finch Inn</button>
-          <button class="btn" onclick="Scenes.market()">🧺 Market Stalls</button>
-          <button class="btn" onclick="Scenes.gate()">🌲 Vale Gate (Wilderness)</button>
-          <button class="btn warn" onclick="Scenes.caveEntrance()">🕳️ Hollowroot Cave</button>
+          <button class="btn" onclick="townSquare()">🏛️ Town Square</button>
+          <button class="btn" onclick="inn()">🍺 The Fir & Finch Inn</button>
+          <button class="btn" onclick="market()">🧺 Market Stalls</button>
+          <button class="btn" onclick="gate()">🌲 Vale Gate (Wilderness)</button>
+          <button class="btn" onclick="blacksmith()">⚒️ Blacksmith</button>
+          <button class="btn" onclick="openJournal()">📜 Quest Journal</button>
           <button class="btn" onclick="UI.goto('menu')">⬅ Main Menu</button>
         </div>
         <div id="town-output" class="log panel"></div>
@@ -284,9 +286,9 @@
 </div>
 
 <!-- DEV ONLY: deterministic console helpers for presets/spawn tables -->
-<script type="module" src="./dev/encounter-demo.js"></script>
+<script type="module" src="./scripts/dev/encounter-demo.js"></script>
 
-<!-- BEGIN: Inline Media Manager -->
+<!-- BEGIN: Inline Media Manager (bg images + music) -->
 <script>
 (function(){
   if (window.__LocationMediaInstalled) return;
@@ -400,8 +402,8 @@
 </script>
 <!-- END: Inline Media Manager -->
 
-<!-- App entry (your modules import the aliases above as needed) -->
-<script type="module" src="./main.js"></script>
+<!-- App entry (module) -->
+<script type="module" src="./scripts/main.js"></script>
 
 <!-- Tab bar container (if used by UI.js) -->
 <div class="tabs panel" id="tabbar"></div>

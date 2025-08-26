@@ -2,7 +2,7 @@
 import { DB } from '../../db.js';
 import { Settings, State, Notifier } from './state.js';
 import { Storage } from './storage.js';
-import { createCharacter } from '../character/character.js';
+import { createCharacter } from '../systems/character.js';
 import { startingStats } from '../data/stats.js'; // new model source of base 12s
 
 export const UI = {

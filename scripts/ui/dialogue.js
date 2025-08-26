@@ -6,6 +6,7 @@ export const Dialogue = {
     window.UI && (window.UI._dlgBack = back);
     document.getElementById('dlg-name').textContent = name;
     document.getElementById('dlg-text').innerHTML = html;
+    
     const wrap = document.getElementById('dlg-choices');
     wrap.innerHTML = '';
     for (const c of choices) {
