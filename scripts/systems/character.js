@@ -1,9 +1,8 @@
 // character.js
-import { DB } from '../../db.js';
-import { Utils, calcMod, baseStats } from './utils.js';
+import { races } from '../data/race.js';
+import { classes } from '../data/class.js';
+import { Utils, calcMod, baseStats } from "./utils.js";
 import { State, Notifier } from './state.js';
-
-// === New stat/ATB model hooks ===
 import {
   startingStats,
   applyAllocation,

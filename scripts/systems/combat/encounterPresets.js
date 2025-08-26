@@ -1,5 +1,9 @@
-// encounterPresets.js — quick presets that call rollEncounter()
+// /scripts/systems/combat/encounterPresets.js
+// Quick presets that delegate to rollEncounter()
 import { rollEncounter, DIFFICULTY } from "./encounters.js";
+
+// Re-export DIFFICULTY so callers can import from this module.
+export { DIFFICULTY } from "./encounters.js";
 
 // Lightweight list you can show in a dropdown
 export const PRESETS = {
@@ -12,7 +16,6 @@ export const PRESETS = {
       maxEnemies: 5,
       allowBossesBelowHard: false,
     },
-    // guidance, not enforced
     recommendedLevels: [1, 4],
   },
 
@@ -68,22 +71,25 @@ export const PRESETS = {
 };
 
 export function listPresets() {
-  return Object.values(PRESETS).map(p => ({ key: p.key, name: p.name, recommendedLevels: p.recommendedLevels }));
+  return Object.values(PRESETS).map(p => ({
+    key: p.key, name: p.name, recommendedLevels: p.recommendedLevels
+  }));
 }
 
-/**
- * Roll a preset encounter; you can override pieces (difficulty/seed/etc.)
- */
-export function rollPreset(presetKey, {
-  partyLevel = 1,
-  partySize = 3,
-  difficulty,     // optional override
-  seed,           // deterministic seed
-  biomes,         // optional override
-  families,       // optional override
-  maxEnemies,     // optional override
-  allowBossesBelowHard, // optional override
-} = {}) {
+/** Roll a preset encounter; you can override pieces (difficulty/seed/etc.) */
+export function rollPreset(
+  presetKey,
+  {
+    partyLevel = 1,
+    partySize = 3,
+    difficulty,
+    seed,
+    biomes,
+    families,
+    maxEnemies,
+    allowBossesBelowHard,
+  } = {}
+) {
   const preset = PRESETS[presetKey];
   if (!preset) throw new Error(`[encounterPresets] Unknown preset: ${presetKey}`);
 
@@ -95,7 +101,8 @@ export function rollPreset(presetKey, {
     biomes:     biomes ?? preset.defaults.biomes,
     families:   families ?? preset.defaults.families,
     maxEnemies: maxEnemies ?? preset.defaults.maxEnemies,
-    allowBossesBelowHard: allowBossesBelowHard ?? preset.defaults.allowBossesBelowHard,
+    allowBossesBelowHard:
+      allowBossesBelowHard ?? preset.defaults.allowBossesBelowHard,
   };
 
   return rollEncounter(cfg);

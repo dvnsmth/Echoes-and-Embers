@@ -1,5 +1,5 @@
 // dialogue.js — UI wrapper for showing dialogue nodes
-import { Notifier } from './state.js';
+import { Notifier } from '../systems/state.js';
 
 export const Dialogue = {
   show(name, html, choices, back = 'town') {

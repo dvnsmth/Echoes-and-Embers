@@ -1,9 +1,9 @@
 // /town/gate.js — Wilderness gate (no cave here)
 import { panelLog, actionsEl, btn, log } from './helpers.js';
-import { Utils } from '../utils.js';
-import { addItem } from '../inventory.js';
-import { Storage } from '../storage.js';
-import { Combat } from '../combat.js';
+import { Utils } from '../systems/utils.js';
+import { addItem } from '../systems/inventory.js';
+import { Storage } from '../systems/storage.js';
+import { Combat } from '../systems/combat/combat.js';
 
 export function gate(){
   try { setLocationMedia && setLocationMedia('Wilderness'); } catch(e){}

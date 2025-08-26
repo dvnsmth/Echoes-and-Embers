@@ -1,6 +1,6 @@
 // /town/square.js — Town Square (no quest logic here)
 import { panelLog, actionsEl, btn, log } from './helpers.js';
-import { Hollowroot } from '../quests/quest.js';
+import { Hollowroot } from '../quests/quests.js';
 import { openJournal } from '../quests/journal.js';
 
 export function townSquare(){

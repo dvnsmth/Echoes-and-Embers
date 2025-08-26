@@ -14,7 +14,7 @@ import { AudioManager } from "systems/audio.js";     // safe-guarded by optional
 // Combat / encounters
 import { Combat } from "systems/combat/combat.js";
 import { rollPreset, DIFFICULTY } from "systems/combat/encounterPresets.js";
-import { buildEncounterFromTable } from "systems/combat/spawnTables.js";
+import { buildEncounterFromTable } from "./data/spawnTables.js";
 import { instantiateEncounter, collapseEncounter, xpForEncounter } from "systems/combat/encounters.js";
 
 // World helpers (avg level/party size)
@@ -187,6 +187,12 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // Harmless prebattle paint (ensures overlay doesn’t render empty later)
   renderPrebattle([]);
+
+  // Replace inline UI.goto handlers with event listeners
+  const btnCreate = document.querySelector("button.btn.primary[onclick*='UI.goto(\'create\')']");
+  if (btnCreate) btnCreate.onclick = () => UI.goto('create');
+  const btnTown = document.querySelector("button.btn[onclick*='UI.goto(\'town\')']");
+  if (btnTown) btnTown.onclick = () => UI.goto('town');
 
   // Journal hotkey
   const btnJ = document.getElementById("btnJournal");

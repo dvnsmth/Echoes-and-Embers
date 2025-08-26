@@ -1,5 +1,5 @@
 import { rollPreset } from "../encounterPresets.js";
-import { buildEncounterFromTable } from "../spawnTables.js";
+import { buildEncounterFromTable } from "../scripts/data/spawnTables.js";
 import { instantiateEncounter, collapseEncounter, xpForEncounter } from "../encounters.js";
 
 window.debugRollPreset = (preset="forest_road_t1", lvl=2, size=3, seed="demo") => {

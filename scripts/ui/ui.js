@@ -1,7 +1,6 @@
 // ui.js — updated for ATB + AP hybrid + 10–60 multi-impact stats
-import { DB } from '../../db.js';
-import { Settings, State, Notifier } from './state.js';
-import { Storage } from './storage.js';
+import { Settings, State, Notifier } from '../systems/state.js';
+import { Storage } from '../systems/storage.js';
 import { createCharacter } from '../systems/character.js';
 import { startingStats } from '../data/stats.js'; // new model source of base 12s
 
@@ -94,7 +93,7 @@ export const UI = {
     if (id === 'inventory') window.setLocationMedia?.('Inventory');
 
     // Existing logic
-    if (id === 'town')      { window.Scenes?.townSquare?.(); }
+    if (id === 'town')      { window.townSquare?.(); }
     if (id === 'sheet')     { UI.refreshSheet(); }
     if (id === 'settings')  { window.SettingsUI?.syncForm?.(); }
     if (id === 'inventory') { UI.refreshInventory(); }

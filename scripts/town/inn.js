@@ -1,8 +1,8 @@
 // /town/inn.js
 import { panelLog, actionsEl, btn, log } from './helpers.js';
-import { Notifier, State } from '../state.js';
-import { spendGold } from '../party/party.js';
-import { Storage } from '../storage.js';
+import { Notifier, State } from '../systems/state.js';
+import { spendGold } from '../systems/party.js';
+import { Storage } from '../systems/storage.js';
 
 export function inn(){
   try { setLocationMedia && setLocationMedia('Inn'); } catch(e){}

@@ -1,9 +1,9 @@
 // ui/startmenu.js — clean, self-contained start overlay
-import { AudioManager } from "systems/audio.js";
-import { State } from "systems/state.js";
-import { Storage } from "systems/storage.js";
-import { UI } from "ui/ui.js";
-import { setRegion, loadRegionFromSave } from "systems/world.js";
+import { AudioManager } from "../systems/audio.js";
+import { State } from "../systems/state.js";
+import { Storage } from "../systems/storage.js";
+import { UI } from "./ui.js";
+import { setRegion, loadRegionFromSave } from "../systems/world.js";
 
 export const StartMenu = {
   el: null,

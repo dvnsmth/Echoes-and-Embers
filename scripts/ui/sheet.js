@@ -1,6 +1,6 @@
 // sheet.js
-import { AudioManager } from './audio.js';
-import { State, Notifier } from './state.js';
+import { AudioManager } from '../systems/audio.js';
+import { State, Notifier } from '../systems/state.js';
 
 // NOTE: In the new model, DEF/RES/PAtk/etc. are computed from stats + gear via character.getDerived().
 // We don't touch meta.armor/init anymore. We just change gear, invalidate the cache, and recompute.

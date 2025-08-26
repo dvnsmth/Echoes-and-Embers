@@ -1,6 +1,5 @@
 import { State, Notifier } from './state.js';
-import { DB } from './db.js';
-import { derivedFrom, AP_CARRY_CAP_DEFAULT } from './stats.js';
+import { derivedFrom, AP_CARRY_CAP_DEFAULT } from '../data/stats.js';
 
 // Reattach methods & recompute derived stats for a loaded character
 function rehydrateCharacter(ch) {
