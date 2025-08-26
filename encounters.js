@@ -1,6 +1,6 @@
 // encounters.js — encounter builder for Stonefall
 // Direct import style (no aggregator needed)
-import { ENEMIES, ENEMY_LIST, enemiesFor, TIER, tiersForPartyLevel } from "./enemies.js";
+import { ENEMIES, ENEMY_LIST, enemiesFor, TIER, tiersForPartyLevel } from "./scripts/data/enemies.js";
 
 // ---- Difficulty model ----
 export const DIFFICULTY = {

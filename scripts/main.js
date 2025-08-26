@@ -10,7 +10,7 @@ import { AudioManager } from '../audio.js';
 import { AudioSettings } from '../audiosettings.js';
 // Encounter system (direct imports)
 import { rollPreset, DIFFICULTY } from '../encounterPresets.js';
-import { buildEncounterFromTable } from './combat/spawnTables.js';
+import { buildEncounterFromTable } from './data/spawnTables.js';
 import { instantiateEncounter, collapseEncounter, xpForEncounter } from '../encounters.js';
 import { State } from '../state.js'; // you already import Settings; add State, too
 

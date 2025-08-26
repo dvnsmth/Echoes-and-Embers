@@ -1,6 +1,6 @@
 // spawnTables.js — handcrafted “recipes” (minions + elite + optional captain)
 // Budget-aware and seedable. Returns ENEMY DEFINITIONS (not instances).
-import { ENEMIES, enemiesFor, TIER } from "../../enemies.js";
+import { ENEMIES, enemiesFor, TIER } from "./enemies.js";
 import { budgetFor, threatFor, DIFFICULTY } from "../../encounters.js";
 
 // Tiny RNG (deterministic if seed provided)
