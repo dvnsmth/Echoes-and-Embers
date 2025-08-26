@@ -5,8 +5,12 @@ import { Utils, calcMod } from "systems/utils.js";
 import { State, Notifier } from "systems/state.js";
 import { Combat } from "systems/combat/combat.js";
 import { startQuest, setStage, completeQuest, getQuest } from "./core.js";
+import { ENEMIES } from "data/enemies.js";
 
 export const HOLLOWROOT_ID = "Q_HOLLOWROOT";
+
+// helper to pull defs by ID
+const F = (...ids) => ids.map(id => ENEMIES[id]).filter(Boolean);
 
 export function offer() {
   const q = startQuest(HOLLOWROOT_ID, { name: "Hollowroot Tensions", stage: 0 });
@@ -34,9 +38,18 @@ export function caveEntrance(){
     "Hollowroot Cave",
     "A root-torn cleft yawns in the hill. Drips echo. Torch-scars mark the stone.",
     [
-      { label:"Parley with the goblins", on:()=>parley() },
-      // keep the quick encounter call for now; swap to world.startRegionEncounter if desired
-      { label:"Scout around (encounter)", on:()=>{ Notifier.goto("combat"); Combat.start?.([{type:"Goblin"},{type:"Goblin"}]); } },
+      {
+        label:"Parley with the goblins",
+        on:()=>parley()
+      },
+      {
+        label:"Scout around (encounter)",
+        on:()=>{
+          // NEW: pass enemy defs by ID
+          Combat.start({ foes: F("goblin","goblin"), skipPreview: true });
+          Notifier.goto("combat");
+        }
+      },
       { label:"Leave", on:()=>Notifier.goto("town") },
     ],
     "town"
@@ -44,7 +57,6 @@ export function caveEntrance(){
 }
 
 export function parley() {
-  startQuest(HOLLOWROOT_ID, { name: "Hollowroot Tensions" });
   setStage(HOLLOWROOT_ID, 2);
 
   Dialogue.show(
@@ -59,14 +71,17 @@ export function parley() {
           if (roll >= 12) {
             Dialogue.show("Goblin Envoy", "“Truce, then. We keep cave. No raids. Take this token.”", [
               { label: "Take token & return", on: () => {
-                  addItem("goblin_token"); // ID, not display name
+                  addItem("goblin_token");
                   completeQuest(HOLLOWROOT_ID, { xp: 120, gold: 25, peaceful: true });
                   Notifier.goto("town");
                 } }
             ], "town");
           } else {
             Dialogue.show("Goblin Envoy", "The envoy hesitates, then snarls. “No trust!”", [
-              { label: "It comes to blows…", on: () => { Notifier.goto("combat"); Combat.start?.([{type:"Goblin"},{type:"Goblin"},{type:"Goblin Captain"}]); } }
+              { label: "It comes to blows…", on: () => {
+                  Combat.start({ foes: F("goblin","goblin","goblin_captain"), skipPreview: true });
+                  Notifier.goto("combat");
+                } }
             ], "town");
           }
         }
@@ -77,16 +92,19 @@ export function parley() {
           const partySTR = Math.max(...(State.party || []).map(c => calcMod(c.stats?.STR ?? 10)), 0);
           const roll = Utils.roll(20) + partySTR;
           if (roll >= 14) {
-            addItem("goblin_token"); // ID, not display name
+            addItem("goblin_token");
             completeQuest(HOLLOWROOT_ID, { xp: 120, gold: 25, peaceful: true });
             Notifier.goto("town");
           } else {
+            Combat.start({ foes: F("goblin","goblin"), skipPreview: true });
             Notifier.goto("combat");
-            Combat.start?.([{type:"Goblin"},{type:"Goblin"}]);
           }
         }
       },
-      { label:"Ambush them", on:()=>{ Notifier.goto("combat"); Combat.start?.([{type:"Goblin"},{type:"Goblin"},{type:"Goblin"}]); } },
+      { label:"Ambush them", on:()=>{
+          Combat.start({ foes: F("goblin","goblin","goblin"), skipPreview: true });
+          Notifier.goto("combat");
+        } },
       { label:"Leave", on:()=>Notifier.goto("town") },
     ],
     "town"

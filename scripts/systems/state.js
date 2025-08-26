@@ -1,23 +1,22 @@
 // scripts/systems/state.js
 // Global game state + lightweight notifier + user settings.
-// NOTE: Inventory is an array; systems/inventory.js will auto-migrate legacy shapes.
+// Strict model: inventory = [{ id, qty }], characters use `equipment`.
 
 export const State = {
-  version: 1,
+  version: 2,
   party: [],
   gold: 20,
-  inventory: [],          // ← array [{name:id, qty:n}]
-  quests: {},
-  flags: {},
+  inventory: [],          // [{ id: "iron_sword", qty: 1 }]
+  quests: {},             // { [questId]: { id,name,stage,status,... } }
+  flags: {},              // misc booleans (e.g., { light:true })
   region: "Thornbridge",
-  // Optional XP curve; UI falls back to this if present
-  xpCurve: [0, 50, 125, 225, 350, 500, 700, 950, 1250, 1600, 2000]
+  xpCurve: [0, 50, 125, 225, 350, 500, 700, 950, 1250, 1600, 2000],
 };
 
 export const Notifier = {
   toast:   (msg) => console.log("[toast]", msg),
   goto:    (id)  => console.log("[goto]", id),
-  refresh: ()    => {}
+  refresh: ()    => {},
 };
 
 export const Settings = {
@@ -43,5 +42,7 @@ export const Settings = {
   reset() {
     this.data = { textSize: 16, theme: "dark", muted: false, reduced: false };
     this.apply();
-  }
+  },
 };
+
+export default State;

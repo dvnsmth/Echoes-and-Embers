@@ -1,11 +1,13 @@
-// quests/lostcanyon.js — example quest: Lost Canyon
+// scripts/quests/lostcanyon.js — Lost Canyon
 import { Dialogue } from "ui/dialogue.js";
 import { Notifier } from "systems/state.js";
 import { Combat } from "systems/combat/combat.js";
 import { addItem } from "systems/inventory.js";
 import { startQuest, setStage, completeQuest, getQuest } from "./core.js";
+import { ENEMIES } from "data/enemies.js";
 
 export const LOST_CANYON_ID = "Q_LOST_CANYON";
+const F = (...ids) => ids.map(id => ENEMIES[id]).filter(Boolean);
 
 export function offer() {
   const q = startQuest(LOST_CANYON_ID, { name: "Lost Canyon", stage: 0, recommended: [3, 6] });
@@ -27,7 +29,10 @@ export function canyonEntrance() {
     "Canyon Rim",
     `Sandstone walls plunge into shadow. Tracks skitter along narrow ledges.`,
     [
-      { label: "Climb down (encounter)", on: () => { Notifier.goto("combat"); Combat.start?.([{type:"Gnoll"},{type:"Gnoll"}]); } },
+      { label: "Climb down (encounter)", on: () => {
+          Combat.start({ foes: F("gnoll","gnoll"), skipPreview: true });
+          Notifier.goto("combat");
+        } },
       { label: "Scout around (find a rope)", on: () => { addItem("sturdy_rope"); Notifier.toast("Found: Sturdy Rope"); Dialogue.back(); } },
       { label: "Leave", on: () => Dialogue.back() },
     ],
@@ -41,7 +46,10 @@ export function bossLedge() {
     "Thief-King’s Ledge",
     `A masked bandit captain glares. “The ledger buys lives. Yours, perhaps.”`,
     [
-      { label: "Fight the Thief-King", on: () => { Notifier.goto("combat"); Combat.start?.([{type:"Bandit Captain"},{type:"Bandit"},{type:"Bandit"}]); } },
+      { label: "Fight the Thief-King", on: () => {
+          Combat.start({ foes: F("bandit_captain","bandit","bandit"), skipPreview: true });
+          Notifier.goto("combat");
+        } },
       { label: "Bargain (give 20g)", on: () => { completeQuest(LOST_CANYON_ID, { xp: 140, gold: 0, peaceful: true }); Dialogue.back(); } },
     ],
     "town"
@@ -57,5 +65,8 @@ export const LostCanyonQuest = {
   get: () => getQuest(LOST_CANYON_ID),
 };
 
+// Named alias (for `import { LostCanyon } from "./lostcanyon.js"`)
 export { LostCanyonQuest as LostCanyon };
+
+// Default export stays the quest object
 export default LostCanyonQuest;

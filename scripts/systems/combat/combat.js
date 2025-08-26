@@ -1,224 +1,193 @@
-// combat.js — ATB + AP hybrid loop
-import { State, Notifier } from '../state.js';
-import { Utils } from '../utils.js';
-import { grantXP } from '../character.js';
-import { addGold } from '../party.js';
-import { Storage } from '../storage.js';
-import { AudioManager } from '../audio.js';
+// /scripts/systems/combat/combat.js
+// ATB + simple AP loop (strict, no DB). Works with instantiateEncounter() foes.
 
+import { State, Notifier } from "systems/state.js";
+import { Utils } from "systems/utils.js";
+import { grantXP } from "systems/character.js";
+import { addGold } from "systems/party.js";
+import { Storage } from "systems/storage.js";
+import { ATBController } from "./atb.js";
+import { instantiateEncounter } from "./encounters.js";
+import { BASE_AP_PER_TURN, AP_CARRY_CAP_DEFAULT } from "data/stats.js";
+import { classes } from "data/class.js";
+import { useItem, getQty, addItem } from "systems/inventory.js";
 
-
-// NEW: ATB + damage helpers
-import {
-  derivedFrom,
-  physicalDamage,
-  magicalDamage,
-  BASE_AP_PER_TURN,
-  AP_CARRY_CAP_DEFAULT,
-} from '../../data/stats.js';
-import { ATBController } from './atb.js';
-
-// ---------- small UI helpers ----------
+// ---------- tiny UI helpers ----------
 function actionBtn(label, on) {
-  const b = document.createElement('button');
-  b.className = 'btn';
+  const b = document.createElement("button");
+  b.className = "btn";
   b.textContent = label;
-  b.onclick = () => { try { AudioManager.play('select'); } catch {} on(); };
+  b.onclick = () => { try { AudioManager.play?.("select"); } catch {} on(); };
   return b;
 }
 function hpbar(current, max) {
-  const pct = Math.max(0, Math.min(100, Math.round((current / max) * 100)));
+  const pct = Math.max(0, Math.min(100, Math.round((current / Math.max(1, max)) * 100)));
   return `<div class="hpbar"><div style="width:${pct}%"></div></div>`;
 }
-function nameOf(x) { return x.name; }
+const nameOf = (x) => x?.name ?? "—";
 
-// ---------- lightweight enemy wrapper for derived math ----------
-function makeEnemyFromDB(def) {
-  // Existing enemy DB uses hp/atk/def, etc. Map that into derivedFrom gear fields.
-  const base = DB.enemies[def.type];
-  const id = Utils.uid();
-
-  const enemy = {
-    id,
-    name: def.type,
-    emoji: base.emoji || '👾',
-
-    // Minimal stat bag (10–60 scale baseline 12’s so math is sane)
-    stats: { STR: 12, DEX: 12, CON: 12, INT: 12, WIS: 12, LCK: 12 },
-
-    // Gear-like mapping to hit your derived formulas:
-    gear: {
-      baseHP: base.hp ?? 100,          // becomes HP backbone
-      armor: base.def ?? 0,            // DEF contribution
-      ward: base.res ?? 0,             // RES contribution (optional in your DB)
-      weapon: base.atk ?? 0,           // PAtk contribution
-      focus: base.matk ?? 0,           // MAtk contribution (optional)
-    },
-
-    temp: {},
-    getStats() { return this.stats; },
-    getDerived() {
-      if (!this._derivedCache) {
-        this._derivedCache = derivedFrom(this.stats, this.gear);
-      }
-      return this._derivedCache;
-    },
-    _damage(n) {
-      this.hp = Math.max(0, Math.min(this.maxHP, this.hp - (n | 0)));
-    },
-  };
-
-  const d = enemy.getDerived();
-  enemy.maxHP = d.HP;
-  enemy.hp = enemy.maxHP;
-
-  // Simple AI tag passthrough
-  enemy.ai = base.ai || 'random';
-
-  return enemy;
+// ---------- normalize foes (accept defs or instances) ----------
+function normalizeFoes(maybeDefsOrFoes = []) {
+  // If they already have hpCurrent, assume instances
+  if (Array.isArray(maybeDefsOrFoes) && maybeDefsOrFoes[0]?.hpCurrent != null) {
+    return maybeDefsOrFoes.map(f => ({ ...f, name: f.name || f.key }));
+  }
+  // Otherwise, instantiate from defs
+  return instantiateEncounter(maybeDefsOrFoes);
 }
 
-// ---------- crit helper (uses derived critPct from attacker) ----------
-function maybeCrit(attDer, baseDamage) {
-  const roll = Math.random() * 100;
-  const crit = (attDer.critPct || 0) > roll;
-  return {
-    damage: crit ? Math.floor(baseDamage * 1.5) : baseDamage,
-    crit,
-  };
+// Basic enemy stat shim for ATB (DEX pacing). Scale with level a bit.
+function foeStatsForATB(foe) {
+  const lvl = Math.max(1, foe.level ?? 1);
+  return { DEX: foe.stats?.DEX ?? (10 + Math.min(20, Math.round(Math.max(1, foe.level ?? 1) * 1.5))) };
 }
 
-// ================================================================
-//                         COMBAT CONTROLLER
-// ================================================================
+// Physical damage (simple): random weapon die + atk - def, min 1
+function physDamage(att, tgt, power = 1.0) {
+  const [dMin, dMax] = Array.isArray(att.dmg) ? att.dmg : [1, 4];
+  const roll = Utils.rand(dMin, dMax);
+  const base = Math.floor((roll + (att.atk | 0) - (tgt.def | 0)) * power);
+  const dmg = Math.max(1, base);
+  // small 5% enemy crit, 10% ally crit (feel free to tune or wire to derived crit)
+  const critChance = att.side === "ally" ? 10 : 5;
+  const crit = Math.random() * 100 < critChance;
+  return { damage: crit ? Math.floor(dmg * 1.5) : dmg, crit };
+}
+
+// ---------- main controller ----------
 export const Combat = {
+  _bumpDamage(attackerId, targetId, amount) {
+    if (!this._stats) return;
+    if (attackerId && this._stats[attackerId]) this._stats[attackerId].dealt += amount;
+    if (targetId && this._stats[targetId]) this._stats[targetId].taken += amount;
+  },
   active: null,
-  _queued: null,
-  _lastRewards: null,   // {xp, gold, loot:[]}
-  _stats: null,         // { [partyId]: {dealt,taken,healGiven,healReceived} }
-
-  // ATB engine refs
   _atb: null,
-  _currentEnt: null,    // entity object from ATB (ally or enemy)
-  _currentChar: null,   // pointer to State.party member or enemy wrapper
-  _pauseMode: true,     // freeze when someone is ready (mobile friendly)
+  _currentEnt: null,
+  _currentChar: null,
+  _stats: null,         // { [partyId]: { dealt,taken,healGiven,healReceived } }
+  _queued: null,
+  _lastRewards: null,
 
-  start(enemyDefs, opts = {}) {
-    const { skipPreview = false } = opts;
-    if (!skipPreview) {
-      this._queued = enemyDefs;
-      this.showPreview(enemyDefs);
-      return;
+  /**
+   * Start combat.
+   * Accepts:
+   *   - Combat.start({ foes, skipPreview })
+   *   - Combat.start(foeDefsArray, { skipPreview })
+   */
+  start(arg, opts = {}) {
+    // Support old call: start(defs, {skipPreview})
+    if (Array.isArray(arg)) {
+      this._queued = normalizeFoes(arg);
+      return (opts.skipPreview ? this._begin() : this.showPreview(this._queued));
     }
-    if (State.party.length === 0) { Notifier.toast('You need at least one party member.'); return; }
+    // New call: start({ foes, skipPreview })
+    const foes = normalizeFoes(arg?.foes || []);
+    this._queued = foes;
+    return (arg?.skipPreview ? this._begin() : this.showPreview(foes));
+  },
 
-    // Build enemy wrappers
-    const enemies = enemyDefs.map(e => makeEnemyFromDB(e));
+  _begin() {
+    if (!State.party?.length) { Notifier.toast("You need at least one party member."); return; }
+    const enemies = this._queued || [];
+    this._queued = null;
 
     // Build ATB controller
-    this._atb = new ATBController({ pauseMode: this._pauseMode });
+    this._atb = new ATBController({ pauseMode: true });
 
     // Register allies
     State.party.forEach(ch => {
-      // Prepare runtime carry caps if you want to alter via passives later
       ch.apCarry = ch.apCarry ?? 0;
       ch.apCarryCap = ch.apCarryCap ?? AP_CARRY_CAP_DEFAULT;
-
       this._atb.addEntity({
         id: ch.id,
-        side: 'ally',
+        side: "ally",
         name: ch.name,
-        getStats: () => ch.getStats(),
+        getStats: () => ch.stats, // DEX is used by ATB
         onTurnStart: () => {},
-        onTurnEnd:   () => {},
+        onTurnEnd: () => {},
       });
     });
 
     // Register enemies
     enemies.forEach(en => {
+      en.side = "enemy"; // mark side for crit bias, etc.
       en.apCarry = 0;
       en.apCarryCap = AP_CARRY_CAP_DEFAULT;
       this._atb.addEntity({
         id: en.id,
-        side: 'enemy',
-        name: en.name,
-        getStats: () => en.getStats(),
+        side: "enemy",
+        name: en.name || en.key,
+        getStats: () => foeStatsForATB(en),
         onTurnStart: () => {},
-        onTurnEnd:   () => {},
+        onTurnEnd: () => {},
       });
     });
 
-    // init combat state
-    this.active = { enemies, turnCount: 0, round: 1 };
-    // per‑party stats
+    this.active = { enemies, turnCount: 0 };
     this._stats = {};
     State.party.forEach(p => { this._stats[p.id] = { dealt: 0, taken: 0, healGiven: 0, healReceived: 0 }; });
 
-    Notifier.goto('combat');
+    Notifier.goto("combat");
     this.render(true);
-    this.log(`Battle begins.`);
+    this.log("Battle begins.");
     this._bootLoop();
   },
 
-  // ---------- PREVIEW ----------
-  showPreview(enemyDefs) {
-    const ov = document.getElementById('prebattle-overlay');
-    const list = document.getElementById('pb-enemies');
-    const g = document.getElementById('pb-gold');
-    const x = document.getElementById('pb-xp');
+  // ---------- preview ----------
+  showPreview(foes) {
+    const ov = document.getElementById("prebattle-overlay");
+    const list = document.getElementById("pb-enemies");
+    const g = document.getElementById("pb-gold");
+    const x = document.getElementById("pb-xp");
     if (!ov || !list) return;
 
-    list.innerHTML = '';
-    enemyDefs.forEach(e => {
-      const base = DB.enemies[e.type];
-      const row = document.createElement('div');
-      row.className = 'stat';
-      row.innerHTML = `<b>${base.emoji || '👾'} ${e.type}</b><span>HP ${base.hp} • DEF ${base.def ?? 0}</span>`;
+    list.innerHTML = "";
+    foes.forEach(f => {
+      const row = document.createElement("div");
+      row.className = "stat";
+      row.innerHTML = `<b>${f.emoji ?? "👾"} ${f.name || f.key}</b><span>HP ${f.hpMax ?? f.hp ?? "?"} • DEF ${f.def ?? 0}</span>`;
       list.appendChild(row);
     });
 
-    if (g) g.textContent = '5–12';
-    if (x) x.textContent = '30–60';
+    if (g) g.textContent = "5–12";
+    if (x) x.textContent = "30–60";
 
-    const start = document.getElementById('pb-start');
-    const cancel = document.getElementById('pb-cancel');
-    start.onclick = () => {
-      this.hidePreview();
-      this.start(this._queued, { skipPreview: true });
-      this._queued = null;
-    };
+    const start = document.getElementById("pb-start");
+    const cancel = document.getElementById("pb-cancel");
+    start.onclick = () => { this.hidePreview(); this._begin(); };
     cancel.onclick = () => { this.hidePreview(); };
 
-    ov.classList.remove('is-hidden');
-    ov.setAttribute('aria-hidden', 'false');
+    ov.classList.remove("is-hidden");
+    ov.setAttribute("aria-hidden", "false");
   },
   hidePreview() {
-    const ov = document.getElementById('prebattle-overlay');
+    const ov = document.getElementById("prebattle-overlay");
     if (!ov) return;
-    ov.classList.add('is-hidden');
-    ov.setAttribute('aria-hidden', 'true');
+    ov.classList.add("is-hidden");
+    ov.setAttribute("aria-hidden", "true");
   },
 
-  // ---------- basic helpers ----------
-  livingAllies() { return State.party.filter(c => c.hp > 0); },
-  livingEnemies() { return (this.active?.enemies || []).filter(e => e.hp > 0); },
+  // ---------- helpers ----------
+  livingAllies()  { return (State.party || []).filter(c => c.hp > 0); },
+  livingEnemies() { return (this.active?.enemies || []).filter(e => (e.hpCurrent ?? e.hp) > 0); },
 
-  // ================================================================
-  //                      ATB LOOP / TURN FLOW
-  // ================================================================
+  damageFoe(foe, n) {
+    foe.hpMax = foe.hpMax ?? foe.hp ?? 1;
+    foe.hpCurrent = Math.max(0, Math.min(foe.hpMax, (foe.hpCurrent ?? foe.hpMax) - (n | 0)));
+  },
+
+  // ---------- ATB loop ----------
   _bootLoop() {
-    // Simple RAF loop that ticks the ATB and pops turns in pause mode
     let last = performance.now();
     const tick = (now) => {
       if (!this.active) return;
       const dt = (now - last) / 1000;
       last = now;
 
-      // If a turn is waiting (pause mode), do not advance time
       this._atb.tick(dt);
 
       if (!this._currentEnt && this._atb.hasTurnReady()) {
-        // Someone is ready: freeze the world (pause mode handled in ATB)
         const ent = this._atb.popTurn();
         this._beginTurn(ent);
       }
@@ -229,23 +198,20 @@ export const Combat = {
   },
 
   _beginTurn(ent) {
-    // ent has { id, side, ap } from ATBController
     this._currentEnt = ent;
+    this.active.turnCount++;
 
-    if (ent.side === 'ally') {
+    if (ent.side === "ally") {
       const ch = State.party.find(p => p.id === ent.id);
       this._currentChar = ch;
-      ch.ap = ent.ap;              // give AP for this turn
-      this.active.turnCount++;
+      ch.ap = ent.ap;
       this.render();
       this.updateIndicators(ent);
       this.log(`Your turn: ${ch.name} (AP ${ch.ap})`);
-      // Player will choose actions; endTurn when AP == 0 or player taps End Turn
     } else {
       const en = this.active.enemies.find(e => e.id === ent.id);
       this._currentChar = en;
       en.ap = ent.ap;
-      this.active.turnCount++;
       this.render();
       this.updateIndicators(ent);
       setTimeout(() => this.enemyAct(en), (window.Settings?.data?.reduced) ? 0 : 260);
@@ -254,363 +220,310 @@ export const Combat = {
 
   _endTurn(carry = 0) {
     if (!this._currentEnt) return;
-    // Commit carryover (capped by entity's apCarryCap, handled inside ATB)
     this._atb.endTurn(this._currentEnt, { carry });
     this._currentEnt = null;
     this._currentChar = null;
 
-    // Check end conditions
     this.checkEnd();
     if (this.active) this.render();
   },
 
-  // ================================================================
-  //                                UI
-  // ================================================================
+  // ---------- UI ----------
   render() {
     const active = this.active; if (!active) return;
 
-    // Party UI
-    const pWrap = document.getElementById('combat-party'); pWrap.innerHTML = '';
-    State.party.forEach(ch => {
-      const row = document.createElement('div'); row.className = 'stat';
-      row.dataset.id = ch.id; row.dataset.side = 'ally';
+    const pWrap = document.getElementById("combat-party");
+    const eWrap = document.getElementById("combat-enemies");
+    const aWrap = document.getElementById("combat-actions");
+    if (pWrap) pWrap.innerHTML = "";
+    if (eWrap) eWrap.innerHTML = "";
+    if (aWrap) aWrap.innerHTML = "";
+
+    // Party
+    (State.party || []).forEach(ch => {
+      const row = document.createElement("div");
+      row.className = "stat";
+      row.dataset.id = ch.id; row.dataset.side = "ally";
       row.innerHTML = `<div><b>${ch.name}</b>${hpbar(ch.hp, ch.maxHP)}</div><span>HP ${ch.hp}/${ch.maxHP}</span>`;
-      pWrap.appendChild(row);
+      pWrap?.appendChild(row);
     });
 
-    // Enemy UI
-    const eWrap = document.getElementById('combat-enemies'); eWrap.innerHTML = '';
+    // Enemies
     active.enemies.forEach(en => {
-      const row = document.createElement('div'); row.className = 'stat';
-      row.dataset.id = en.id; row.dataset.side = 'enemy';
-      row.innerHTML = `<div><b>${en.emoji}</b>${hpbar(en.hp, en.maxHP)}</div><span>HP ${en.hp}/${en.maxHP}</span>`;
-      eWrap.appendChild(row);
+      const hpMax = en.hpMax ?? en.hp ?? 1;
+      const hpCur = en.hpCurrent ?? en.hp ?? hpMax;
+      const row = document.createElement("div");
+      row.className = "stat";
+      row.dataset.id = en.id; row.dataset.side = "enemy";
+      row.innerHTML = `<div><b>${en.emoji ?? "👾"} ${en.name || en.key}</b>${hpbar(hpCur, hpMax)}</div><span>HP ${hpCur}/${hpMax}</span>`;
+      eWrap?.appendChild(row);
     });
 
     this.renderActions();
   },
 
   updateIndicators(ent = this._currentEnt) {
-    const ti = document.getElementById('turn-indicator');
-    const rt = document.getElementById('round-tracker');
-
-    // Clear highlights
-    document.querySelectorAll('#combat-party .stat, #combat-enemies .stat').forEach(el => el.classList.remove('active-turn'));
-
-    // We no longer track rounds/initiative. Show total turns elapsed.
+    const ti = document.getElementById("turn-indicator");
+    const rt = document.getElementById("round-tracker");
+    document.querySelectorAll("#combat-party .stat, #combat-enemies .stat").forEach(el => el.classList.remove("active-turn"));
     if (rt) rt.textContent = `Turns: ${this.active?.turnCount ?? 0}`;
 
-    if (!ent) { if (ti) ti.textContent = '—'; return; }
-    if (ent.side === 'ally') {
+    if (!ent) { if (ti) ti.textContent = "—"; return; }
+    if (ent.side === "ally") {
       const row = document.querySelector(`#combat-party .stat[data-id="${ent.id}"]`);
-      row && row.classList.add('active-turn');
+      row?.classList.add("active-turn");
       const ch = State.party.find(p => p.id === ent.id);
-      if (ti) ti.textContent = `🛡️ ${ch?.name || 'Ally'} turn (AP ${ch?.ap ?? 0})`;
+      if (ti) ti.textContent = `🛡️ ${ch?.name || "Ally"} turn (AP ${ch?.ap ?? 0})`;
     } else {
       const row = document.querySelector(`#combat-enemies .stat[data-id="${ent.id}"]`);
-      row && row.classList.add('active-turn');
+      row?.classList.add("active-turn");
       const en = this.active.enemies.find(e => e.id === ent.id);
-      if (ti) ti.textContent = `👾 ${en?.name || 'Enemy'} turn (AP ${en?.ap ?? 0})`;
+      if (ti) ti.textContent = `👾 ${en?.name || "Enemy"} turn (AP ${en?.ap ?? 0})`;
     }
   },
 
   renderActions() {
-    const wrap = document.getElementById('combat-actions'); wrap.innerHTML = '';
-    if (!this._currentEnt) return; // waiting for someone to be ready
+    const wrap = document.getElementById("combat-actions");
+    if (!wrap || !this._currentEnt) return;
 
-    if (this._currentEnt.side === 'enemy') {
-      // Enemy will act automatically
-      return;
-    }
+    if (this._currentEnt.side === "enemy") return;
 
     const ch = this._currentChar;
     if (!ch || ch.hp <= 0) { this._endTurn(0); return; }
 
-    // Show AP + actions; player can chain while AP > 0
+    // Player actions
     wrap.appendChild(actionBtn(`Attack (1 AP)`, () => this.chooseTarget(ch, 1)));
     wrap.appendChild(actionBtn(`Ability (2 AP+)`, () => this.chooseAbility(ch)));
-    wrap.appendChild(actionBtn(`Item (1 AP)`, () => {
-      if (State.inventory['Minor Tonic']) {
-        const heal = 6;
-        ch.hp = Math.min(ch.maxHP, ch.hp + heal);
-        State.inventory['Minor Tonic']--;
-        try { AudioManager.play('heal'); } catch {}
-        this._bumpHeal(ch.id, ch.id, heal);
-        this.log(`${ch.name} uses a tonic (+${heal} HP).`);
-        this.render();
-        ch.ap -= 1;
-        if (ch.ap <= 0) this._endTurn(Math.min(2, 0)); else this.renderActions();
-      } else Notifier.toast('No items.');
-    }));
+    wrap.appendChild(actionBtn(`Item (1 AP)`, () => this.chooseItem(ch)));
     wrap.appendChild(actionBtn(`End Turn`, () => {
-      // carry whatever AP remains (capped)
-      const carry = Math.max(0, Math.min(ch.ap, ch.apCarryCap ?? AP_CARRY_CAP_DEFAULT));
+      const carry = Math.max(0, Math.min(ch.ap | 0, ch.apCarryCap ?? AP_CARRY_CAP_DEFAULT));
       this._endTurn(carry);
     }));
   },
 
-  // ========= target selection =========
-  chooseTarget(ch, apCost = 1) {
-    const wrap = document.getElementById('combat-actions'); wrap.innerHTML = '';
-    this.livingEnemies().forEach(en => {
-      wrap.appendChild(actionBtn(`→ Hit ${en.name}`, () => this.doAttack(ch, en, apCost)));
-    });
-    wrap.appendChild(actionBtn('Back', () => this.renderActions()));
-  },
-
-  // choose ally target (heals/buffs)
-  chooseAlly(ch, cb) {
-    const wrap = document.getElementById('combat-actions'); wrap.innerHTML = '';
-    this.livingAllies().forEach(ally => {
-      wrap.appendChild(actionBtn(`→ ${ally.name}`, () => cb(ally)));
-    });
-    wrap.appendChild(actionBtn('Back', () => this.renderActions()));
-  },
-
-  // ========= abilities =========
-  chooseAbility(ch) {
-    const wrap = document.getElementById('combat-actions'); wrap.innerHTML = '';
-    const abl = (DB.classes[ch.clazz]?.abilities || []).filter(a => a.lvl <= ch.level);
-    abl.forEach(a => wrap.appendChild(actionBtn(a.name, () => this.useAbility(ch, a.name))));
-    wrap.appendChild(actionBtn('Back', () => this.renderActions()));
-  },
-
-  // ========= tracking helpers =========
-  _bumpDamage(attackerId, targetId, dmg) {
-    const t = this._stats;
-    if (t && attackerId && t[attackerId]) t[attackerId].dealt += dmg;
-    if (t && targetId && t[targetId]) t[targetId].taken += dmg;
-  },
-  _bumpHeal(healerId, targetId, amt) {
-    const t = this._stats;
-    if (t && healerId && t[healerId]) t[healerId].healGiven += amt;
-    if (t && targetId && t[targetId]) t[targetId].healReceived += amt;
-  },
-
-  // ========= new damage (derived math + crit) =========
-  _doPhysical(attacker, target, skillPower = 1.0) {
-    const aDer = attacker.getDerived ? attacker.getDerived() : derivedFrom(attacker.getStats(), attacker.gear);
-    const tDer = target.getDerived ? target.getDerived() : derivedFrom(target.getStats(), target.gear);
-    const base = physicalDamage(aDer, tDer, skillPower);
-    const { damage, crit } = maybeCrit(aDer, base);
-    return { damage, crit };
-  },
-  _doMagical(attacker, target, skillPower = 1.0) {
-    const aDer = attacker.getDerived ? attacker.getDerived() : derivedFrom(attacker.getStats(), attacker.gear);
-    const tDer = target.getDerived ? target.getDerived() : derivedFrom(target.getStats(), target.gear);
-    const base = magicalDamage(aDer, tDer, skillPower);
-    const { damage, crit } = maybeCrit(aDer, base);
-    return { damage, crit };
-  },
-
-  // ========= basic attack =========
-  doAttack(attacker, target, apCost = 1) {
-    if (!this._currentChar || attacker.id !== this._currentChar.id) return;
-    if ((attacker.ap | 0) < apCost) { Notifier.toast('Not enough AP.'); return; }
-
-    const { damage, crit } = this._doPhysical(attacker, target, 1.0);
-    target._damage(damage);
-    try { AudioManager.play('hit'); } catch {}
-    this._bumpDamage(attacker.id || null, target.id || null, damage);
-    this.log(`${nameOf(attacker)} hits ${nameOf(target)} for ${damage}${crit ? ' (CRIT)' : ''}.`);
-
-    attacker.ap -= apCost;
-    this.render();
-    if (attacker.ap <= 0) {
-      this._endTurn(Math.min(attacker.apCarryCap ?? AP_CARRY_CAP_DEFAULT, 0));
-    } else {
-      this.renderActions();
+  // ---------- items ----------
+  chooseItem(ch) {
+    const wrap = document.getElementById("combat-actions"); wrap.innerHTML = "";
+    const tonicQty = getQty("minor_tonic");
+    if (tonicQty <= 0) {
+      wrap.appendChild(actionBtn("No usable items", () => this.renderActions()));
+      wrap.appendChild(actionBtn("Back", () => this.renderActions()));
+      return;
     }
-  },
-
-  // ========= abilities (examples migrated to derived math) =========
-  useAbility(ch, name) {
-    const enemies = this.livingEnemies();
-    switch (name) {
-      case 'Power Strike': {
-        const cost = 2;
-        if (ch.ap < cost) { Notifier.toast('Not enough AP.'); return this.renderActions(); }
-        return this._targetEnemy(ch, (en) => {
-          const { damage, crit } = this._doPhysical(ch, en, 1.25); // modest skillPower
-          en._damage(damage);
-          try { AudioManager.play('hit'); } catch {}
-          this._bumpDamage(ch.id, en.id || null, damage);
-          this.log(`${ch.name} uses Power Strike for ${damage}${crit ? ' (CRIT)' : ''}.`);
-          ch.ap -= cost;
-          this.render();
-          if (ch.ap <= 0) this._endTurn(0); else this.renderActions();
-        });
-      }
-
-      case 'Twin Shot': {
-        const cost = 2;
-        if (ch.ap < cost) { Notifier.toast('Not enough AP.'); return this.renderActions(); }
-        if (enemies.length === 0) return;
-        // Hit the front enemy twice at –10% each for flavor
-        const en = enemies[0];
-        for (let i = 0; i < 2; i++) {
-          const { damage, crit } = this._doPhysical(ch, en, 0.9);
-          en._damage(damage);
-          this._bumpDamage(ch.id, en.id || null, damage);
-          this.log(`${ch.name} arrow ${i + 1} hits for ${damage}${crit ? ' (CRIT)' : ''}.`);
-        }
-        ch.ap -= cost;
+    // choose party member target
+    this.chooseAlly(ch, (ally) => {
+      if ((ch.ap | 0) < 1) { Notifier.toast("Not enough AP."); return this.renderActions(); }
+      const idx = (State.party || []).findIndex(p => p.id === ally.id);
+      const res = useItem("minor_tonic", idx);
+      if (res?.ok) {
+        try { AudioManager.play?.("heal"); } catch {}
+        this._bumpHeal(ch.id, ally.id, 6); // approximate
+        this.log(`${ch.name} uses Minor Tonic on ${ally.name}.`);
+        ch.ap -= 1;
         this.render();
         if (ch.ap <= 0) this._endTurn(0); else this.renderActions();
-        return;
+      } else {
+        Notifier.toast("Cannot use that now.");
+        this.renderActions();
       }
+    });
+  },
 
-      case 'Sneak Attack': {
+  // ---------- target pickers ----------
+  chooseTarget(ch, apCost = 1) {
+    const wrap = document.getElementById("combat-actions"); wrap.innerHTML = "";
+    this.livingEnemies().forEach(en => {
+      wrap.appendChild(actionBtn(`→ Hit ${en.name || en.key}`, () => this.doAttack(ch, en, apCost)));
+    });
+    wrap.appendChild(actionBtn("Back", () => this.renderActions()));
+  },
+
+  chooseAlly(ch, cb) {
+    const wrap = document.getElementById("combat-actions"); wrap.innerHTML = "";
+    this.livingAllies().forEach(ally => {
+      const disabled = ally.hp >= ally.maxHP;
+      const btn = actionBtn(`→ ${ally.name}${disabled ? " (full)" : ""}`, () => !disabled && cb(ally));
+      btn.disabled = disabled;
+      wrap.appendChild(btn);
+    });
+    wrap.appendChild(actionBtn("Back", () => this.renderActions()));
+  },
+
+  // ---------- abilities ----------
+  chooseAbility(ch) {
+    const wrap = document.getElementById("combat-actions"); wrap.innerHTML = "";
+    const abl = (classes[ch.clazz]?.abilities || []).filter(a => (a.lvl ?? 1) <= ch.level);
+    if (!abl.length) {
+      wrap.appendChild(actionBtn("No abilities", () => this.renderActions()));
+      wrap.appendChild(actionBtn("Back", () => this.renderActions()));
+      return;
+    }
+    abl.forEach(a => wrap.appendChild(actionBtn(a.name, () => this.useAbility(ch, a.name))));
+    wrap.appendChild(actionBtn("Back", () => this.renderActions()));
+  },
+
+  useAbility(ch, name) {
+    switch (name) {
+      case "Power Strike": {
         const cost = 2;
-        if (ch.ap < cost) { Notifier.toast('Not enough AP.'); return this.renderActions(); }
+        if ((ch.ap | 0) < cost) { Notifier.toast("Not enough AP."); return this.renderActions(); }
         return this._targetEnemy(ch, (en) => {
-          const { damage, crit } = this._doPhysical(ch, en, 1.4);
-          en._damage(damage);
-          this._bumpDamage(ch.id, en.id || null, damage);
-          this.log(`${ch.name} Sneak Attacks for ${damage}${crit ? ' (CRIT)' : ''}.`);
-          ch.ap -= cost;
-          this.render();
-          if (ch.ap <= 0) this._endTurn(0); else this.renderActions();
+          const { damage, crit } = physDamage(
+            { atk: ch.getDerived().PAtk, dmg: [2, 6], side: "ally" },
+            { def: en.def ?? 0, dmg: en.dmg || [1,4], side: "enemy" },
+            1.25
+          );
+          this.damageFoe(en, damage);
+          this._bumpDamage(ch.id, en.id, damage);
+          try { AudioManager.play?.("hit"); } catch {}
+          this.log(`${ch.name} uses Power Strike for ${damage}${crit ? " (CRIT)" : ""}.`);
+          ch.ap -= cost; this.render(); (ch.ap <= 0) ? this._endTurn(0) : this.renderActions();
         });
       }
 
-      case 'Firebolt': {
+      case "Firebolt": {
         const cost = 2;
-        if (ch.ap < cost) { Notifier.toast('Not enough AP.'); return this.renderActions(); }
+        if ((ch.ap | 0) < cost) { Notifier.toast("Not enough AP."); return this.renderActions(); }
         return this._targetEnemy(ch, (en) => {
-          const { damage, crit } = this._doMagical(ch, en, 1.3);
-          en._damage(damage);
-          this._bumpDamage(ch.id, en.id || null, damage);
-          this.log(`${ch.name} hurls Firebolt for ${damage}${crit ? ' (CRIT)' : ''}.`);
-          ch.ap -= cost;
-          this.render();
-          if (ch.ap <= 0) this._endTurn(0); else this.renderActions();
+          const { damage, crit } = physDamage( // using physDamage for now; swap when MAtk/RES pipeline is ready
+            { atk: Math.floor(ch.getDerived().MAtk * 0.8), dmg: [3, 7], side: "ally" },
+            { def: en.def ?? 0, dmg: en.dmg || [1,4], side: "enemy" },
+            1.2
+          );
+          this.damageFoe(en, damage);
+          this._bumpDamage(ch.id, en.id, damage);
+          try { AudioManager.play?.("hit"); } catch {}
+          this.log(`${ch.name} casts Firebolt for ${damage}${crit ? " (CRIT)" : ""}.`);
+          ch.ap -= cost; this.render(); (ch.ap <= 0) ? this._endTurn(0) : this.renderActions();
         });
       }
 
-      case 'Heal': {
+      case "Heal": {
         const cost = 2;
-        if (ch.ap < cost) { Notifier.toast('Not enough AP.'); return this.renderActions(); }
+        if ((ch.ap | 0) < cost) { Notifier.toast("Not enough AP."); return this.renderActions(); }
         return this.chooseAlly(ch, (ally) => {
-          // Simple heal: WIS+INT backed — feel free to swap to your healing formula
-          const aDer = ch.getDerived();
-          const base = 4 + Math.floor((aDer.MAtk / 8) + (aDer.RES / 10));
+          const d = ch.getDerived();
+          const base = 4 + Math.floor((d.MAtk / 8) + (d.RES / 10));
           const healed = Math.max(0, Math.min(ally.maxHP - ally.hp, base));
           ally.hp = Math.min(ally.maxHP, ally.hp + base);
           if (healed > 0) this._bumpHeal(ch.id, ally.id, healed);
           this.log(`${ch.name} heals ${ally.name} for ${healed}.`);
-          ch.ap -= cost;
-          this.render();
-          if (ch.ap <= 0) this._endTurn(0); else this.renderActions();
+          ch.ap -= cost; this.render(); (ch.ap <= 0) ? this._endTurn(0) : this.renderActions();
         });
       }
 
-      case 'Inspire': {
-        const cost = 1;
-        if (ch.ap < cost) { Notifier.toast('Not enough AP.'); return this.renderActions(); }
-        ch.meta._inspire = 1;
-        this.log(`${ch.name} inspires the party (next ally +10% damage).`);
-        ch.ap -= cost;
-        this.render();
-        if (ch.ap <= 0) this._endTurn(0); else this.renderActions();
-        return;
-      }
-
       default:
-        Notifier.toast('Ability not implemented (yet).');
+        Notifier.toast("Ability not implemented (yet).");
         return this.renderActions();
     }
   },
 
   _targetEnemy(ch, fn) {
-    const wrap = document.getElementById('combat-actions'); wrap.innerHTML = '';
-    this.livingEnemies().forEach(en => wrap.appendChild(actionBtn(`→ ${en.name}`, () => { fn(en); })));
-    wrap.appendChild(actionBtn('Back', () => this.renderActions()));
+    const wrap = document.getElementById("combat-actions"); wrap.innerHTML = "";
+    this.livingEnemies().forEach(en => wrap.appendChild(actionBtn(`→ ${en.name || en.key}`, () => fn(en))));
+    wrap.appendChild(actionBtn("Back", () => this.renderActions()));
   },
 
-  // ========= enemy AI (simple) =========
+  // ---------- basic attack ----------
+  doAttack(attacker, target, apCost = 1) {
+    if (!this._currentChar || attacker.id !== this._currentChar.id) return;
+    if ((attacker.ap | 0) < apCost) { Notifier.toast("Not enough AP."); return; }
+
+    const aD = attacker.getDerived();
+    const { damage, crit } = physDamage(
+      { atk: aD.PAtk, dmg: [1, 6], side: "ally" },
+      { def: target.def ?? 0, dmg: target.dmg || [1,4], side: "enemy" },
+      1.0
+    );
+    this.damageFoe(target, damage);
+    this._bumpDamage(attacker.id, target.id || null, damage);
+    try { AudioManager.play?.("hit"); } catch {}
+    this.log(`${nameOf(attacker)} hits ${nameOf(target)} for ${damage}${crit ? " (CRIT)" : ""}.`);
+
+    attacker.ap -= apCost;
+    this.render();
+    if (attacker.ap <= 0) this._endTurn(0); else this.renderActions();
+  },
+
+  // ---------- enemy AI ----------
   enemyAct(en) {
     if (!this.active) return;
     if (!this._currentEnt || this._currentEnt.id !== en.id) return;
 
-    const targets = this.livingAllies(); if (targets.length === 0) return;
-    let tgt = targets[0];
-    if (en.ai === 'lowest') tgt = targets.sort((a, b) => a.hp - b.hp)[0];
-    else if (en.ai === 'random') tgt = Utils.choice(targets);
+    const targets = this.livingAllies(); if (!targets.length) return;
+    const target = (en.ai === "lowest")
+      ? [...targets].sort((a, b) => a.hp - b.hp)[0]
+      : Utils.choice(targets);
 
-    // Enemy spends AP until 0: basic attacks
-    const swings = Math.max(1, Math.min(3, en.ap | 0));
-    for (let i = 0; i < swings && tgt.hp > 0; i++) {
-      const { damage, crit } = this._doPhysical(en, tgt, 1.0);
-      // Inspire buff check (+10% to next ally damage): enemy ignores it
-      tgt._damage ? tgt._damage(damage) : (tgt.hp = Math.max(0, tgt.hp - damage));
-      try { AudioManager.play('hit'); } catch {}
-      this._bumpDamage(null, tgt.id, damage);
-      this.log(`${en.name} hits ${tgt.name} for ${damage}${crit ? ' (CRIT)' : ''}.`);
-      en.ap -= 1;
-      if (tgt.hp <= 0) break;
+    // spend all AP on swings
+    let swings = Math.max(1, Math.min(3, en.ap | 0));
+    while (swings-- > 0 && target.hp > 0) {
+      const { damage, crit } = physDamage(
+        { atk: en.atk ?? 4, dmg: en.dmg || [1,4], side: "enemy" },
+        { def: target.getDerived().DEF ?? 0, dmg: [1,2], side: "ally" },
+        1.0
+      );
+      target.hp = Math.max(0, target.hp - damage);
+      this._bumpDamage(en.id || null, target.id || null, damage);
+      try { AudioManager.play?.("hit"); } catch {}
+      this.log(`${en.name || en.key} hits ${target.name} for ${damage}${crit ? " (CRIT)" : ""}.`);
+      if (target.hp <= 0) break;
     }
 
     this.render();
     this._endTurn(0);
   },
 
-  // ================================================================
-  //                     END / SUMMARY / ESCAPE
-  // ================================================================
+  // ---------- end / rewards ----------
   checkEnd() {
     const allies = this.livingAllies();
     const foes = this.livingEnemies();
+
     if (allies.length === 0) {
-      this.log('Your party falls…');
-      Notifier.toast('Defeat.');
-      try { AudioManager.play('defeat'); } catch {}
+      this.log("Your party falls…");
+      Notifier.toast("Defeat.");
+      try { AudioManager.play?.("defeat"); } catch {}
       this.active = null;
       Storage.save();
       return;
     }
     if (foes.length === 0) {
-      // Determine rewards + loot (items auto-added to inventory)
       const xp = Utils.rand(30, 60);
       const gold = Utils.rand(5, 12);
       const loot = [];
       if (Utils.rand(1, 100) <= 30) {
-        State.inventory['Minor Tonic'] = (State.inventory['Minor Tonic'] || 0) + 1;
-        loot.push('Minor Tonic ×1');
+        addItem("minor_tonic", 1);
+        loot.push("Minor Tonic ×1");
       }
       addGold(gold);
       grantXP(xp);
       Storage.save();
 
       this._lastRewards = { xp, gold, loot };
-
-      // Show summary overlay (no auto-redirect)
-      try { AudioManager.play('victory'); } catch {}
+      try { AudioManager.play?.("victory"); } catch {}
       this.showPostBattleSummary();
       return;
     }
   },
 
   showPostBattleSummary() {
-    const ov = document.getElementById('postbattle-overlay');
-    const list = document.getElementById('post-summary');
-    const sumGold = document.getElementById('sum-gold');
-    const sumXP = document.getElementById('sum-xp');
-    const sumItems = document.getElementById('sum-items');
-    const finish = document.getElementById('post-finish');
+    const ov = document.getElementById("postbattle-overlay");
+    const list = document.getElementById("post-summary");
+    const sumGold = document.getElementById("sum-gold");
+    const sumXP = document.getElementById("sum-xp");
+    const sumItems = document.getElementById("sum-items");
+    const finish = document.getElementById("post-finish");
     if (!ov || !list) return;
 
-    if (sumGold) sumGold.textContent = String(this._lastRewards?.gold ?? 0);
-    if (sumXP) sumXP.textContent = String(this._lastRewards?.xp ?? 0);
-    const itemsText = (this._lastRewards?.loot?.length ? this._lastRewards.loot.join(', ') : '—');
-    if (sumItems) sumItems.textContent = `Items: ${itemsText}`;
+    sumGold && (sumGold.textContent = String(this._lastRewards?.gold ?? 0));
+    sumXP && (sumXP.textContent = String(this._lastRewards?.xp ?? 0));
+    sumItems && (sumItems.textContent = this._lastRewards?.loot?.length ? this._lastRewards.loot.join(", ") : "—");
 
-    list.innerHTML = '';
-    State.party.forEach(p => {
+    list.innerHTML = "";
+    (State.party || []).forEach(p => {
       const s = this._stats?.[p.id] || { dealt: 0, taken: 0, healGiven: 0, healReceived: 0 };
-      const row = document.createElement('div');
-      row.className = 'stat';
+      const row = document.createElement("div");
+      row.className = "stat";
       row.innerHTML = `
         <b>${p.name}</b>
         <div class="row" style="gap:8px;flex-wrap:wrap">
@@ -623,35 +536,35 @@ export const Combat = {
     });
 
     finish.onclick = () => {
-      const el = document.getElementById('combat-log');
-      if (el) el.innerHTML = '';
-      ov.classList.add('is-hidden');
-      ov.setAttribute('aria-hidden', 'true');
+      const el = document.getElementById("combat-log"); if (el) el.innerHTML = "";
+      ov.classList.add("is-hidden"); ov.setAttribute("aria-hidden", "true");
       this.active = null;
-      Notifier.goto('town');
+      Notifier.goto("town");
     };
 
-    ov.classList.remove('is-hidden');
-    ov.setAttribute('aria-hidden', 'false');
+    ov.classList.remove("is-hidden");
+    ov.setAttribute("aria-hidden", "false");
   },
 
   tryFlee() {
     if (Utils.rand(1, 100) <= 50) {
-      Notifier.toast('You flee successfully.');
+      Notifier.toast("You flee successfully.");
       this.active = null;
       Storage.save();
-      Notifier.goto('town');
+      Notifier.goto("town");
     } else {
-      Notifier.toast('Could not escape!');
+      Notifier.toast("Could not escape!");
       this.render();
     }
   },
 
   log(msg) {
-    const el = document.getElementById('combat-log');
-    const p = document.createElement('p');
+    const el = document.getElementById("combat-log");
+    const p = document.createElement("p");
     p.textContent = msg;
-    el.appendChild(p);
-    el.scrollTop = el.scrollHeight;
+    el?.appendChild(p);
+    if (el) el.scrollTop = el.scrollHeight;
   }
 };
+
+export default Combat;

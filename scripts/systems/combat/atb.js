@@ -1,17 +1,17 @@
-// atb.js
-import { BASE_AP_PER_TURN, AP_CARRY_CAP_DEFAULT, atbTime } from '../../data/stats.js';
+// /scripts/systems/combat/atb.js
+import { BASE_AP_PER_TURN, AP_CARRY_CAP_DEFAULT, atbTime } from "data/stats.js";
 
 export class ATBController {
   constructor({ pauseMode = true } = {}) {
     this.clock = 0;
-    this.entities = []; // { id, name, getDEX, onTurnStart, onTurnEnd, apCarry, ready }
+    this.entities = [];     // { id, side, name, getStats, onTurnStart, onTurnEnd, apCarry, apCarryCap, ready }
     this.pauseMode = pauseMode;
-    this.readyQueue = []; // entity ids when turn-ready
+    this.readyQueue = [];   // entity objects when turn-ready
   }
 
   addEntity(ent) {
     ent._atb = 0;
-    ent._atbFill = () => atbTime(ent.getStats().DEX); // pull live DEX
+    ent._atbFill = () => atbTime(ent.getStats().DEX);
     ent.apCarry = ent.apCarry ?? 0;
     ent.apCarryCap = ent.apCarryCap ?? AP_CARRY_CAP_DEFAULT;
     ent.ready = false;
@@ -19,7 +19,7 @@ export class ATBController {
   }
 
   tick(dt) {
-    if (this.pauseMode && this.readyQueue.length) return; // freeze when someone is ready
+    if (this.pauseMode && this.readyQueue.length) return;
     for (const e of this.entities) {
       if (e.ready) continue;
       e._atb += dt;
@@ -36,11 +36,10 @@ export class ATBController {
   popTurn() {
     const ent = this.readyQueue.shift();
     if (!ent) return null;
-    // compute AP pool
     const ap = BASE_AP_PER_TURN + Math.min(ent.apCarry, ent.apCarryCap);
     ent.ap = ap;
     ent.ready = true;
-    if (ent.onTurnStart) ent.onTurnStart(ent);
+    ent.onTurnStart?.(ent);
     return ent;
   }
 
@@ -48,6 +47,6 @@ export class ATBController {
     ent.apCarry = Math.min(ent.apCarryCap, carry);
     ent._atb = 0;
     ent.ready = false;
-    if (ent.onTurnEnd) ent.onTurnEnd(ent);
+    ent.onTurnEnd?.(ent);
   }
 }
