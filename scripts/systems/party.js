@@ -1,5 +1,5 @@
 // scripts/systems/party.js
-// Single source of truth for party membership + gold helpers (no UI).
+// Single source of truth for party membership + gold helpers (no DOM).
 import { State, Notifier } from "systems/state.js";
 import { Storage } from "systems/storage.js";
 
@@ -87,7 +87,6 @@ export function spendGold(amount = 0, { save = true, notify = true } = {}) {
 
 /* ----------------- handy group calculations ---------------- */
 export function highestStat(modKey = "DEX") {
-  // Example utility if you need checks by party stat
   const p = ensureParty();
   return Math.max(...p.map(c => Number(c?.stats?.[modKey] ?? 10)), 10);
 }

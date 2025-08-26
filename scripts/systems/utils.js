@@ -10,5 +10,3 @@ export const Utils = {
 // Align with the new system: Lv1 starts at 12 (10–60 band).
 export function baseStats(){ return { STR:12, DEX:12, CON:12, INT:12, WIS:12, LCK:12 }; }
 
-// Kept for legacy formulas (e.g., UI display); not used by the new combat math.
-export function calcMod(score){ return Math.floor((score-12)/2); }
