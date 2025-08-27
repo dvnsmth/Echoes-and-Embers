@@ -79,4 +79,4 @@ export function startRegionEncounter(opts = {}) {
 
 // Re-export for convenience if other modules expect them here
 export { partyLevelAvg, partySize };
-export { DIFFICULTY } from "systems/combat/encounterPresets.js";
+export { DIFFICULTY } from "./combat/encounterPresets.js";

@@ -235,7 +235,7 @@ When moving files, re-run npm run check to catch broken imports.
 
 Using Dialogue in a quest
 
-import { Dialogue } from "ui/dialogue.js";
+import { Dialogue } from "../scripts/ui/dialogue.js";
 Dialogue.show("Edda", "Bring peace if you can.", [
   { label: "Accept", on: () => { /* setStage/notify */ } },
   { label: "Ask for advice", on: () => Dialogue.show("Edda", "Go light-footed.", [{ label:"Thanks", on: Dialogue.back }], "town") }
@@ -244,13 +244,13 @@ Dialogue.show("Edda", "Bring peace if you can.", [
 
 Starting a region-appropriate encounter
 
-import { startRegionEncounter } from "systems/world.js";
+import { startRegionEncounter } from "../scripts/systems/world.js";
 startRegionEncounter(); // uses current region & party size/level
 
 
 Party helpers
 
-import { hasSpace, addMember, spendGold, addGold, partyLevelAvg } from "systems/party.js";
+import { hasSpace, addMember, spendGold, addGold, partyLevelAvg } from "../systems/party.js";
 
 11) Contact & collaboration
 

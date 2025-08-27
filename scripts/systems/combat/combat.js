@@ -1,16 +1,16 @@
 // /scripts/systems/combat/combat.js
 // ATB + simple AP loop (strict, no DB). Works with instantiateEncounter() foes.
 
-import { State, Notifier } from "systems/state.js";
-import { Utils } from "systems/utils.js";
-import { grantXP } from "systems/character.js";
-import { addGold } from "systems/party.js";
-import { Storage } from "systems/storage.js";
+import { State, Notifier } from "../state.js";
+import { Utils } from "../utils.js";
+import { grantXP } from "../character.js";
+import { addGold } from "../party.js";
+import { Storage } from "../storage.js";
 import { ATBController } from "./atb.js";
 import { instantiateEncounter } from "./encounters.js";
-import { BASE_AP_PER_TURN, AP_CARRY_CAP_DEFAULT } from "data/stats.js";
-import { classes } from "data/class.js";
-import { useItem, getQty, addItem } from "systems/inventory.js";
+import { BASE_AP_PER_TURN, AP_CARRY_CAP_DEFAULT } from "../../data/stats.js";
+import { classes } from "../../data/class.js";
+import { useItem, getQty, addItem } from "../inventory.js";
 
 // ---------- tiny UI helpers ----------
 function actionBtn(label, on) {

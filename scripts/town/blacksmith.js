@@ -1,8 +1,8 @@
 // /scripts/town/blacksmith.js
 import { panelLog, actionsEl, btn, log } from "./helpers.js";
-import { Notifier } from "systems/state.js";
-import { spendGold } from "systems/party.js";
-import { addItem, getItemData, priceOf } from "systems/inventory.js";
+import { Notifier } from "../systems/state.js";
+import { spendGold } from "../systems/party.js";
+import { addItem, getItemData, priceOf } from "../systems/inventory.js";
 
 // Smith's catalog (IDs from data/weapons.js and data/items.js)
 const SMITH_STOCK = [

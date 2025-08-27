@@ -1,9 +1,9 @@
 // scripts/systems/storage.js
 // Save/load for the strict model. No legacy migrations, no DB usage.
 
-import { State, Notifier } from "systems/state.js";
-import { derivedFrom } from "data/stats.js";
-import { classes } from "data/class.js";
+import { State, Notifier } from "./state.js";
+import { derivedFrom } from "../data/stats.js";
+import { classes } from "../data/class.js";
 
 const SAVE_KEY = "hollowvale-save";
 

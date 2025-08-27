@@ -1,13 +1,13 @@
 // scripts/systems/inventory.js
 // Strict inventory: IDs only, store = [{ id, qty }]. No migrations, no name mapping.
 
-import { State, Notifier } from "systems/state.js";
-import { Storage } from "systems/storage.js";
-import { addGold, spendGold } from "systems/party.js";
+import { State, Notifier } from "./state.js";
+import { Storage } from "./storage.js";
+import { addGold, spendGold } from "./party.js";
 
-import ITEMS   from "data/items.js";
-import WEAPONS from "data/weapons.js";
-import ARMOR   from "data/armor.js";
+import ITEMS   from "../data/items.js";
+import WEAPONS from "../data/weapons.js";
+import ARMOR   from "../data/armor.js";
 
 const ItemDB = Object.freeze({ ...ITEMS, ...WEAPONS, ...ARMOR });
 

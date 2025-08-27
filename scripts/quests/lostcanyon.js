@@ -1,10 +1,10 @@
 // scripts/quests/lostcanyon.js — Lost Canyon
-import { Dialogue } from "ui/dialogue.js";
-import { Notifier } from "systems/state.js";
-import { Combat } from "systems/combat/combat.js";
-import { addItem } from "systems/inventory.js";
+import { Dialogue } from "../ui/dialogue.js";
+import { Notifier } from "../systems/state.js";
+import { Combat } from "../systems/combat/combat.js";
+import { addItem } from "../systems/inventory.js";
 import { startQuest, setStage, completeQuest, getQuest } from "./core.js";
-import { ENEMIES } from "data/enemies.js";
+import { ENEMIES } from "../data/enemies.js";
 
 export const LOST_CANYON_ID = "Q_LOST_CANYON";
 const F = (...ids) => ids.map(id => ENEMIES[id]).filter(Boolean);

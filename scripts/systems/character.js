@@ -1,14 +1,14 @@
 // scripts/systems/character.js
 // Pure character logic (no DOM). Strict new model only.
 
-import { races } from "data/race.js";
-import { classes } from "data/class.js";
+import { races } from "../data/race.js";
+import { classes } from "../data/class.js";
 import {
   startingStats, applyAllocation, derivedFrom,
   LV_CAP, LEVEL1_ALLOC_POINTS, PER_LEVEL_POINTS
-} from "data/stats.js";
-import { Utils, calcMod } from "systems/utils.js";
-import { State, Notifier } from "systems/state.js";
+} from "../data/stats.js";
+import { Utils, calcMod } from "./utils.js";
+import { State, Notifier } from "./state.js";
 
 const clampStat = v => Math.max(10, Math.min(60, v | 0));
 const clampHP   = (hp, max) => Math.max(0, Math.min(max, hp | 0));
