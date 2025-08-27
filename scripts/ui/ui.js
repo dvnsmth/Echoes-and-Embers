@@ -1,27 +1,71 @@
 // scripts/ui/ui.js — UI shell (no DB usage)
 // Uses import-map aliases (data/*, systems/*)
 
-import { Settings, State, Notifier } from "systems/state.js";
-import { Storage } from "systems/storage.js";
-import { createCharacter } from "systems/character.js";
-import { startingStats } from "data/stats.js";
-import { races } from "data/race.js";
-import { classes } from "data/class.js";
+import { Settings, State, Notifier } from "../systems/state.js";
+import { Storage } from "../systems/storage.js";
+import { createCharacter } from "../systems/character.js";
+import { startingStats } from "../data/stats.js";
+import { races } from "../data/race.js";
+import { classes } from "../data/class.js";
 import {
   listInventory,
   useItem,
   removeItem
-} from "systems/inventory.js";
+} from "../systems/inventory.js";
 
 // Optional Settings sub-UI lives in this file (exported at bottom)
 export const UI = {
   tabs: [
-    { id: "menu",      label: "🏠 Menu" },
+    // { id: "menu",      label: "🏠 Menu" },
     { id: "create",    label: "🧙 Party" },
     { id: "town",      label: "🏘️ Town" },
     { id: "sheet",     label: "📜 Sheets" },
     { id: "inventory", label: "🎒 Inventory" },
   ],
+
+  // --- Party gating helpers ---
+  isPartyReady() {
+    return (State.party?.length || 0) > 0;  // change to >= 4 if you want full party required
+  },
+
+lockNav(locked) {
+  // Header buttons
+  ["btnSave","btnLoad","btnReset"].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) b.disabled = !!locked;
+  });
+
+  // Tabs: disable everything except "create" while locked
+  const tb = document.getElementById("tabbar");
+  if (tb) {
+    const btns = tb.querySelectorAll("button");
+    btns.forEach((b, idx) => {
+      const t = UI.tabs[idx];
+      if (!t) return;
+   b.disabled = !!locked && !(t.id === "create" || t.id === "settings");
+    });
+  }
+
+  // Disable the "Enter Town" button on the Party screen
+  const enter = document.getElementById("btnEnterTown");
+  if (enter) enter.disabled = !!locked;
+
+  // Disable the quest chip so it can't send you to Town
+  const chip = document.getElementById("quest-chip");
+  if (chip) {
+    if (locked) {
+      chip.onclick = null;
+      chip.setAttribute("aria-disabled","true");
+      chip.style.pointerEvents = "none";
+      chip.style.opacity = "0.6";
+    } else {
+      chip.onclick = () => UI.goto("town");
+      chip.removeAttribute("aria-disabled");
+      chip.style.pointerEvents = "";
+      chip.style.opacity = "";
+    }
+  }
+},
 
   init() {
     // Bridge Notifier to concrete UI functions
@@ -85,6 +129,13 @@ export const UI = {
     if (addBtn) addBtn.onclick = UI.addCharacter;
     const newBtn = document.getElementById("cc-new");
     if (newBtn) newBtn.onclick = UI.newCharacter;
+    const demoBtn = document.getElementById("cc-load-demo");
+if (demoBtn) demoBtn.onclick = UI.loadDemoParty;
+
+// Optional: if you want Enter Town disabled until party > 0
+const enterBtn = document.getElementById("btnEnterTown");
+if (enterBtn) enterBtn.disabled = !((State.party?.length || 0) > 0);
+
 
     UI.refreshParty();
     UI.refreshSheet();
@@ -109,37 +160,52 @@ export const UI = {
 
     // Initialize Settings UI handlers (safe to call once)
     SettingsUI.init?.();
+        // Lock navigation until the party is ready
+    UI.lockNav(!UI.isPartyReady());
   },
 
-  goto(id) {
-    // Screen routing
+goto(id) {
+  // Hard gate: allow Settings anytime; block others until party exists
+  if (!UI.isPartyReady() && !(id === "create" || id === "settings")) {
+    UI.toast("Finish creating your party first.");
+    return;
+  }
+
+  // Are we already on this screen?
+  const current = document.querySelector(".screen.active");
+  const sameScreen =
+    current && (current.id === `screen-${id}` || current.id === id);
+
+  // Only toggle .active classes if we're switching screens
+  if (!sameScreen) {
     document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-    const el = document.getElementById(`screen-${id}`);
-    if (el) el.classList.add("active");
+    const screenEl = document.getElementById(`screen-${id}`) || document.getElementById(id);
+    if (screenEl) screenEl.classList.add("active");
+  }
 
-    // Highlight the active tab
-    const tb = document.getElementById("tabbar");
-    if (tb) {
-      document.querySelectorAll("#tabbar button").forEach(b => b.classList.remove("active"));
-      const idx = this.tabs.findIndex(t => t.id === id);
-      if (idx >= 0) {
-        const btn = tb.querySelectorAll("button")[idx];
-        if (btn) btn.classList.add("active");
-      }
+  // Highlight the active tab (do this always)
+  const tb = document.getElementById("tabbar");
+  if (tb) {
+    document.querySelectorAll("#tabbar button").forEach(b => b.classList.remove("active"));
+    const idx = this.tabs.findIndex(t => t.id === id);
+    if (idx >= 0) {
+      const btn = tb.querySelectorAll("button")[idx];
+      if (btn) btn.classList.add("active");
     }
+  }
 
-    // Update hero art for UI tabs (no music change)
-    if (id === "menu")      window.setLocationMedia?.("Menu");
-    if (id === "create")    window.setLocationMedia?.("CreateParty");
-    if (id === "sheet")     window.setLocationMedia?.("Sheet");
-    if (id === "inventory") window.setLocationMedia?.("Inventory");
+  // ✅ Update hero art / music even if we were already on this screen
+  if (id === "menu")      window.setLocationMedia?.("Menu");
+  if (id === "create")    window.setLocationMedia?.("CreateParty");
+  if (id === "sheet")     window.setLocationMedia?.("Sheet");
+  if (id === "inventory") window.setLocationMedia?.("Inventory");
 
-    // Route side-effects
-    if (id === "town")      { window.townSquare?.(); }
-    if (id === "sheet")     { UI.refreshSheet(); }
-    if (id === "settings")  { window.SettingsUI?.syncForm?.(); }
-    if (id === "inventory") { UI.refreshInventory(); }
-  },
+  // Route side-effects (safe to run when sameScreen too)
+  if (id === "town")      { window.townSquare?.(); }
+  if (id === "sheet")     { UI.refreshSheet(); }
+  if (id === "settings")  { window.SettingsUI?.syncForm?.(); }
+  if (id === "inventory") { UI.refreshInventory(); }
+},
 
   toast(msg) {
     const t = document.createElement("div");
@@ -202,6 +268,7 @@ export const UI = {
     State.party = Array.isArray(State.party) ? State.party : [];
     State.party.push(ch);
     UI.refreshParty(); UI.refreshSheet(); UI.toast(`${ch.name} joined the party.`);
+    UI.lockNav(!UI.isPartyReady());   // <--- unlocks nav once a character exists
   },
 
   newCharacter() {
@@ -215,7 +282,50 @@ export const UI = {
     if (raceEl)  raceEl.selectedIndex  = 0;
     if (classEl) classEl.selectedIndex = 0;
     UI.toast("Character form reset.");
+    
   },
+
+  loadDemoParty() {
+  // Create 3 sample heroes using your existing creator (keeps derived stats consistent)
+  const demo = [
+    createCharacter({
+      name: "Arin",
+      race: "Human",
+      clazz: "Warrior",
+      bg: "Veteran",
+      stats: { STR: 16, DEX: 12, CON: 14, INT: 10, WIS: 11, LCK: 10 }
+    }),
+    createCharacter({
+      name: "Lira",
+      race: "Elf",
+      clazz: "Wizard",
+      bg: "Scholar",
+      stats: { STR: 10, DEX: 12, CON: 11, INT: 17, WIS: 14, LCK: 10 }
+    }),
+    createCharacter({
+      name: "Korin",
+      race: "Dwarf",
+      clazz: "Cleric",
+      bg: "Acolyte",
+      stats: { STR: 12, DEX: 10, CON: 15, INT: 11, WIS: 16, LCK: 9 }
+    }),
+  ];
+
+  // Replace party (cap at 4 if needed)
+  State.party = demo.slice(0, 4);
+
+  // Recompute lock state now that a party exists
+  UI.lockNav(!UI.isPartyReady());
+
+  // Enable Enter Town if present (redundant but safe)
+  const enterBtn = document.getElementById("btnEnterTown");
+  if (enterBtn) enterBtn.disabled = (State.party.length === 0);
+
+  // Refresh UI
+  UI.refreshParty();
+  UI.refreshSheet();
+  UI.toast("Sample party loaded!");
+},
 
   // ===== Party panel =====
   refreshParty() {
@@ -441,7 +551,7 @@ export const UI = {
 
 // helper to check active screen id
 function isActive(id) {
-  const el = document.getElementById(`screen-${id}`);
+  const el = document.getElementById(`screen-${id}`) || document.getElementById(id);
   return !!(el && el.classList.contains("active"));
 }
 

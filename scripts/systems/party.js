@@ -1,7 +1,7 @@
 // scripts/systems/party.js
 // Single source of truth for party membership + gold helpers (no DOM).
-import { State, Notifier } from "systems/state.js";
-import { Storage } from "systems/storage.js";
+import { State, Notifier } from "./state.js";
+import { Storage } from "./storage.js";
 
 export const MAX_PARTY = 4;
 

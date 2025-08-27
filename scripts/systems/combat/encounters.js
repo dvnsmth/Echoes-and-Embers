@@ -1,6 +1,6 @@
 // /scripts/systems/combat/encounters.js
 // Encounter builder for Stonefall (strict).
-import { ENEMIES, ENEMY_LIST, enemiesFor, TIER, tiersForPartyLevel } from "data/enemies.js";
+import { ENEMIES, ENEMY_LIST, enemiesFor, TIER, tiersForPartyLevel } from "../../data/enemies.js";
 
 // ---- Difficulty model ----
 export const DIFFICULTY = {

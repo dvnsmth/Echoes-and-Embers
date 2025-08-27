@@ -208,3 +208,69 @@ body.light .overlay-card{ background:#ffffff; border-color:var(--muted-light); b
   background: rgba(255,255,255,0.08);
   border-radius: 8px 8px 0 0;
 }
+
+/* === START OVERLAY (append to end of styles.css) === */
+.start-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(2px);
+}
+
+.start-card {
+  width: min(92vw, 640px);
+  background: rgba(20,22,28,0.92);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  padding: 20px 22px 24px;
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+}
+
+.start-hero {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  user-select: none;
+  pointer-events: none;
+}
+
+.start-title {
+  margin: 2px 0 6px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+
+.start-actions {
+  width: 100%;
+  display: grid;
+  gap: 10px;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-ghost {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: #202533;
+  color: #e9eef9;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 120ms ease, filter 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+.btn-primary { background: #2a3350; }
+.btn-secondary { background: #222a40; }
+.btn-ghost { background: transparent; border-color: rgba(255,255,255,0.1); }
+
+.btn-primary:active,
+.btn-secondary:active,
+.btn-ghost:active { transform: scale(0.98); }

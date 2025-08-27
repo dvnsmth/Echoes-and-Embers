@@ -1,24 +1,25 @@
-// main.js — entry point (no Scenes references)
+// ---------- Imports (all relative from /scripts/) ----------
+import { UI, SettingsUI } from "./ui/ui.js";
+import { StartMenu } from "./ui/startmenu.js";
 
-// ---------- Imports (match your import map) ----------
-import { UI, SettingsUI } from "ui/ui.js";
-import { StartMenu } from "ui/startmenu.js";
+import { Town } from "./town/index.js";              
+import { openJournal } from "./quests/journal.js";
 
-import { Town } from "town";                         // /scripts/town/index.js
-import { openJournal } from "quests/journal.js";
-
-import { State } from "systems/state.js";
-import { Storage } from "systems/storage.js";
-import { AudioManager } from "systems/audio.js";     // safe-guarded by optional chaining
+import { State } from "./systems/state.js";
+import { Storage } from "./systems/storage.js";
+import { AudioManager } from "./systems/audio.js";
 
 // Combat / encounters
-import { Combat } from "systems/combat/combat.js";
-import { rollPreset, DIFFICULTY } from "systems/combat/encounterPresets.js";
-import { buildEncounterFromTable } from "./data/spawnTables.js";
-import { instantiateEncounter, collapseEncounter, xpForEncounter } from "systems/combat/encounters.js";
+import { Combat } from "./systems/combat/combat.js";
+import { rollPreset, DIFFICULTY } from "./systems/combat/encounterPresets.js";
+import { instantiateEncounter, collapseEncounter, xpForEncounter } from "./systems/combat/encounters.js";
 
-// World helpers (avg level/party size)
-import { partyLevelAvg, partySize } from "systems/world.js";
+// Data + world helpers
+import { buildEncounterFromTable } from "./data/spawnTables.js";
+import { partyLevelAvg, partySize } from "./systems/world.js";
+
+
+
 
 // Expose building functions + journal for index.html buttons
 Object.assign(window, {
@@ -177,28 +178,56 @@ window.addEventListener("DOMContentLoaded", () => {
   UI?.init?.();
   SettingsUI?.init?.();
   StartMenu?.init?.();
+    
 
-  // Initial music (see MediaManager in index.html)
-  try { MediaManager?.setInitialMusic?.(["Assets/audio/Music/start song.mp3"]); } catch {}
+  // 🔇 Do NOT start music here (browsers block it). We start it inside startmenu.js after a click.
+  // try { MediaManager?.setInitialMusic?.(["Assets/audio/Music/That Zen Moment.mp3"]); } catch {}
 
   // Audio
   initSfx();
   wireSettingsControls();
 
+  // Remember last active tab for "Continue"
+  if (UI?.goto && !UI.goto.__wrappedForLastTab) {
+    const orig = UI.goto.bind(UI);
+    UI.goto = (id) => {
+      try { localStorage.setItem('ui:lastTab', id); } catch {}
+      return orig(id);
+    };
+    UI.goto.__wrappedForLastTab = true;
+  }
+
   // Harmless prebattle paint (ensures overlay doesn’t render empty later)
   renderPrebattle([]);
 
-  // Replace inline UI.goto handlers with event listeners
-  // Wire up event listeners for Create/Manage Party and Enter Town buttons
+    // Replace inline UI.goto handlers with event listeners
   const btnCreate = document.getElementById("btnCreateParty");
   if (btnCreate) btnCreate.onclick = () => UI.goto('create');
   const btnTown = document.getElementById("btnEnterTown");
   if (btnTown) btnTown.onclick = () => UI.goto('town');
 
-  // Journal hotkey
-  
   const btnJ = document.getElementById("btnJournal");
   if (btnJ) btnJ.onclick = () => openJournal();
+
+// --- Start Screen bindings ---
+const newGameBtn = document.getElementById("btn-newgame");
+if (newGameBtn) {
+  newGameBtn.addEventListener("click", () => {
+    // switch art/music immediately to the Party theme
+    try { setLocationMedia?.("CreateParty"); } catch {}
+
+    // hide overlay and go to the Party screen
+    document.getElementById("start-overlay")?.classList.add("is-hidden");
+    UI.goto("create");
+  });
+}
+  const continueBtn = document.getElementById("btn-continue");
+  if (continueBtn) {
+    continueBtn.addEventListener("click", () => {
+      document.getElementById("start-overlay")?.classList.add("is-hidden");
+      Storage.load();
+    });
+  }
 
   // Initial hero art
   try { setLocationMedia?.("Start"); } catch {}

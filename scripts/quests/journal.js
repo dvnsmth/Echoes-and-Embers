@@ -1,5 +1,5 @@
 // quests/journal.js — Quest Journal UI (creates its own screen on first open)
-import { State, Notifier } from "systems/state.js";
+import { State, Notifier } from "../systems/state.js";
 import { listActive, getQuest } from "./core.js";
 import { Hollowroot } from "./quests.js";
 import { HOLLOWROOT_ID } from "./hollowroot.js";

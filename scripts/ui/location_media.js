@@ -6,7 +6,7 @@
 
   // --- CONFIG (no music on non-location tabs) ---
 window.LOCATION_MEDIA = {
-  "Start":        { image: "Assets/Backgrounds/start.png",        music: ["Assets/audio/Music/start song.mp3"] },
+  "Start":        { image: "Assets/Backgrounds/start.png",        music: ["Assets/audio/Music/That Zen Moment.mp3"] },
   "Town Square":  { image: "Assets/Backgrounds/town_square.png",  music: ["Assets/Music/town square.mp3"] },
   "Inn":          { image: "Assets/Backgrounds/inn.png",          music: ["Assets/Music/inn fire.mp3","Assets/Music/inn noise.mp3"] },
   "Market":       { image: "Assets/Backgrounds/market.png",       music: ["Assets/Music/market noise.mp3","Assets/Music/market song.mp3"] },

@@ -1,25 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
+  <link rel="icon" href="Assets/images/Backgrounds/favicon.png">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Echoes and Embers – RPG (Vertical Slice)</title>
   <link rel="stylesheet" href="./styles.css">
 
-  <!-- ES Module import map for clean paths -->
-  <script type="importmap">
-  {
-    "imports": {
-      "data/":    "./scripts/data/",
-      "systems/": "./scripts/systems/",
-      "town/":    "./scripts/town/",
-      "quests/":  "./scripts/quests/",
-      "ui/":      "./scripts/ui/",
-      "dev/":     "./scripts/dev/",
-      "town":     "./scripts/town/index.js"
-    }
-  }
-  </script>
+ 
 </head>
 <body>
 <div id="app">
@@ -41,22 +29,20 @@
   </header>
 
   <!-- Start Menu Overlay -->
-  <div id="start-overlay" class="is-hidden" aria-hidden="true" role="dialog" aria-label="Start Menu">
-    <div id="start-card">
-      <h1>Echoes and Embers</h1>
-      <p>Lightweight, text-first fantasy RPG. Create a party, talk to NPCs, and tackle the Hollowroot quest.</p>
-      <div class="choice-list">
-        <button class="btn primary" id="btnNewGame">🌟 New Game</button>
-        <button class="btn" id="btnContinue">▶ Continue</button>
-      </div>
-      <div class="divider" style="margin:10px 0"></div>
-      <div class="row">
-        <span class="pill">Tip: Use <b>Save/Load</b> in the header anytime.</span>
-        <div class="spacer"></div>
-        <button class="btn small" id="btnCloseStart">Close</button>
-      </div>
+ <!-- Start Screen (modal overlay) -->
+<div id="start-overlay" class="start-overlay" aria-modal="true" role="dialog" aria-label="Start screen">
+  <div class="start-card" role="document">
+    <img class="start-hero" src="Assets/images/Backgrounds/start.png" alt="Echoes & Embers artwork">
+
+    <h2 class="start-title">Echoes and Embers</h2>
+
+    <div class="start-actions">
+      <button id="btn-newgame" class="btn-primary">🌟 New Game</button>
+      <button id="btn-continue" class="btn-secondary" hidden>▶ Continue</button>
+      <button id="btn-settings" class="btn-ghost">⚙️ Settings</button>
     </div>
   </div>
+</div>
 
   <!-- Pre-Battle Preview Overlay -->
   <div id="prebattle-overlay" class="overlay is-hidden" aria-hidden="true" role="dialog" aria-label="Battle Preview">
@@ -95,7 +81,9 @@
 
     <div id="screen-container" class="col">
       <!-- Main Menu -->
-      <section id="screen-menu" class="screen active panel section">
+     <!-- Menu hidden -->
+<section id="screen-menu" class="screen panel section" style="display:none">
+
         <h2>Welcome, traveler.</h2>
         <p class="tag">Create your party (up to 4), meet an NPC, and take on your first quest in the Vale.</p>
         <div class="choice-list">
@@ -105,7 +93,7 @@
       </section>
 
       <!-- Party Creator -->
-      <section id="screen-create" class="screen panel section">
+   <section id="create" class="screen active panel section">
         <h2>Party</h2>
         <div class="grid cols-2">
           <div class="col">
@@ -124,6 +112,7 @@
               <div class="spacer"></div>
               <button class="btn good" id="cc-add">Add to Party</button>
               <button class="btn" id="cc-new">Create a New Character</button>
+              <button class="btn warn" id="cc-load-demo">⚡ Load Sample Party</button>
             </div>
             <p class="tag">
               Race bonuses apply on creation. Tap a stat to adjust. Stats use a compressed 10–60 scale and
@@ -134,7 +123,7 @@
             <h3>Current Party <span class="tag" id="party-count">0 / 4</span></h3>
             <div id="party-list" class="col"></div>
             <div class="row">
-              <button class="btn" onclick="UI.goto('menu')">⬅ Back</button>
+              <button class="btn" onclick="UI.goto('create')">⬅ Back</button>
               <div class="spacer"></div>
               <button class="btn primary" onclick="UI.goto('town')">Enter Town</button>
             </div>
@@ -153,7 +142,7 @@
           <button class="btn" onclick="gate()">🌲 Vale Gate (Wilderness)</button>
           <button class="btn" onclick="blacksmith()">⚒️ Blacksmith</button>
           <button class="btn" onclick="openJournal()">📜 Quest Journal</button>
-          <button class="btn" onclick="UI.goto('menu')">⬅ Main Menu</button>
+          <button class="btn" onclick="UI.goto('create')">⬅ Main Menu</button>
         </div>
         <div id="town-output" class="log panel"></div>
       </section>
@@ -197,7 +186,7 @@
         <h2>Character Sheet</h2>
         <div id="sheet-list" class="col"></div>
         <div class="row">
-          <button class="btn" onclick="UI.goto('menu')">⬅ Back</button>
+          <button class="btn" onclick="UI.goto('create')">⬅ Back</button>
         </div>
       </section>
 
@@ -210,7 +199,7 @@
         </div>
         <div id="inv-list" class="col"></div>
         <div class="row" style="margin-top:8px">
-          <button class="btn" onclick="UI.goto('menu')">⬅ Back</button>
+          <button class="btn" onclick="UI.goto('create')">⬅ Back</button>
         </div>
       </section>
 
@@ -274,7 +263,7 @@
           <button class="btn primary" id="set-save">Save Settings</button>
           <button class="btn" id="set-reset">Reset to Defaults</button>
           <div class="spacer"></div>
-          <button class="btn" onclick="UI.goto('menu')">⬅ Back</button>
+          <button class="btn" onclick="UI.goto('create')">⬅ Back</button>
         </div>
       </section>
     </div>
@@ -292,17 +281,17 @@
   window.__LocationMediaInstalled = true;
 
   window.LOCATION_MEDIA = {
-  "Start":         { image: "Assets/images/Backgrounds/start.png",       music: ["Assets/audio/Music/start song.mp3"] },
-  "CreateParty":   { image: "Assets/images/Backgrounds/start.png",       music: ["Assets/audio/Music/start song.mp3"] },
-  "Town Square":   { image: "Assets/images/Backgrounds/town_square.png", music: ["Assets/audio/Music/town square.mp3"] },
+  "Start":         { image: "Assets/images/Backgrounds/start.png",       music: ["Assets/audio/Music/That Zen Moment.mp3"] },
+  "CreateParty":   { image: "Assets/images/Backgrounds/start.png",       music: ["Assets/audio/Music/That Zen Moment.mp3"] },
+  "Town Square":   { image: "Assets/images/Backgrounds/town_square.png", music: ["Assets/audio/Music/start song.mp3"] },
   "Inn":           { image: "Assets/images/Backgrounds/inn.png",         music: ["Assets/audio/Music/inn fire.mp3","Assets/audio/Music/inn noise.mp3"] },
   "Market":        { image: "Assets/images/Backgrounds/market.png",      music: ["Assets/audio/Music/market noise.mp3","Assets/audio/Music/market song.mp3"] },
   "Wilderness":    { image: "Assets/images/Backgrounds/wilderness.png",  music: ["Assets/audio/Music/wilderness.mp3","Assets/audio/Music/woods.mp3"] },
   "Cave Entrance": { image: "Assets/images/Backgrounds/cave.png",        music: ["Assets/audio/Music/cave music.mp3","Assets/audio/Music/cave ambience.mp3"] },
-  "Settings":      { image: "Assets/images/Backgrounds/settings.png",    music: ["Assets/audio/Music/ourlordisnotready.mp3"] },
+  "Settings":      { image: "Assets/images/Backgrounds/settings.png",     },
   "Inventory":     { image: "Assets/images/Backgrounds/inventorystats.png" },
   "Sheet":         { image: "Assets/images/Backgrounds/inventorystats.png" },
-  "Menu":          { image: "Assets/images/Backgrounds/start.png",       music: ["Assets/audio/Music/start song.mp3"] }
+  "Menu":          { image: "Assets/images/Backgrounds/start.png",     }
   };
 
   function ensureHero(){
@@ -362,27 +351,51 @@
 
   window.MediaManager = {
     setLocation(key){
-      const m = window.LOCATION_MEDIA[key] || {};
-      const hero = ensureHero();
+  const m = window.LOCATION_MEDIA[key] || {};
+  const hero = ensureHero();
 
-      if (m.image){
-        hero.classList.remove('collapsed');
-        hero.style.opacity = '0';
-        const img = `url('${encodeURI(m.image)}')`;
-        setTimeout(() => { hero.style.backgroundImage = img; hero.style.opacity = '1'; }, 60);
-      } else {
-        hero.style.backgroundImage = '';
-        hero.classList.add('collapsed');
-      }
+  if (m.image){
+    hero.classList.remove('collapsed');
+    hero.style.opacity = '0';
+    const img = `url('${encodeURI(m.image)}')`;
+    setTimeout(() => { hero.style.backgroundImage = img; hero.style.opacity = '1'; }, 60);
+  } else {
+    hero.style.backgroundImage = '';
+    hero.classList.add('collapsed');
+  }
 
-      if (Object.prototype.hasOwnProperty.call(m, 'music')) setBgm(m.music);
-      localStorage.setItem('lastLocation', key);
-    },
-    setInitialMusic(srcOrList){
-      if (localStorage.getItem('bgmMuted') == null) localStorage.setItem('bgmMuted','false');
-      if (localStorage.getItem('bgmVolume') == null) localStorage.setItem('bgmVolume','0.7');
-  setBgm(srcOrList || ["Assets/audio/Music/start song.mp3"]);
-    },
+  // === Only (re)start music if the track list actually changed ===
+  const nextList = Array.isArray(m.music) ? m.music : (m.music ? [m.music] : []);
+  const prevList = window.__currentMusicList || [];
+  const sameTracks = JSON.stringify(nextList) === JSON.stringify(prevList);
+
+  if (Object.prototype.hasOwnProperty.call(m, 'music') && !sameTracks) {
+    setBgm(m.music);
+    window.__currentMusicList = nextList;
+  }
+
+  localStorage.setItem('lastLocation', key);
+},
+
+   setInitialMusic(srcOrList){
+  // Ensure defaults exist
+  if (localStorage.getItem('bgmMuted')  == null) localStorage.setItem('bgmMuted','false');
+  if (localStorage.getItem('bgmVolume') == null) localStorage.setItem('bgmVolume','0.7');
+
+  // Normalize to an array
+  const list = Array.isArray(srcOrList) ? srcOrList : (srcOrList ? [srcOrList] : []);
+
+  // If nothing provided, do nothing (don't touch whatever is already playing)
+  if (!list.length) return;
+
+  // ✅ Don’t restart if it’s the same set of tracks
+  const prev = window.__currentMusicList || [];
+  if (JSON.stringify(list) === JSON.stringify(prev)) return;
+
+  setBgm(list);
+  window.__currentMusicList = list;
+},
+
     mute(flag){
       localStorage.setItem('bgmMuted', String(!!flag));
       (window.__bgmTracks||[]).forEach(a => a.muted = !!flag);

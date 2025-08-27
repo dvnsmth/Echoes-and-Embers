@@ -1,5 +1,5 @@
 // /scripts/systems/combat/atb.js
-import { BASE_AP_PER_TURN, AP_CARRY_CAP_DEFAULT, atbTime } from "data/stats.js";
+import { BASE_AP_PER_TURN, AP_CARRY_CAP_DEFAULT, atbTime } from "../../data/stats.js";
 
 export class ATBController {
   constructor({ pauseMode = true } = {}) {

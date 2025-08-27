@@ -1,11 +1,11 @@
 // quests/hollowroot.js
-import { Dialogue } from "ui/dialogue.js";
-import { addItem } from "systems/inventory.js";
-import { Utils, calcMod } from "systems/utils.js";
-import { State, Notifier } from "systems/state.js";
-import { Combat } from "systems/combat/combat.js";
+import { Dialogue } from "../ui/dialogue.js";
+import { addItem } from "../systems/inventory.js";
+import { Utils, calcMod } from "../systems/utils.js";
+import { State, Notifier } from "../systems/state.js";
+import { Combat } from "../systems/combat/combat.js";
 import { startQuest, setStage, completeQuest, getQuest } from "./core.js";
-import { ENEMIES } from "data/enemies.js";
+import { ENEMIES } from "../data/enemies.js";
 
 export const HOLLOWROOT_ID = "Q_HOLLOWROOT";
 

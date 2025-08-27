@@ -1,10 +1,10 @@
 // quests/core.js — centralized quest state & rewards (no UI)
 // Keeps all mutable quest data in State.quests and handles rewards/saving.
 
-import { State, Notifier } from "systems/state.js";
-import { Storage } from "systems/storage.js";
-import { addGold } from "systems/party.js";
-import { grantXP } from "systems/character.js";
+import { State, Notifier } from "../systems/state.js";
+import { Storage } from "../systems/storage.js";
+import { addGold } from "../systems/party.js";
+import { grantXP } from "../systems/character.js";
 
 function ensureState() {
   if (!State.quests) State.quests = {};
