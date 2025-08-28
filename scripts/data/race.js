@@ -5,8 +5,8 @@ export const races = {
   Human: {
     key: "Human",
     desc: "Adaptable, versatile, balanced.",
-    // ANY: +2 applies to the class primary stat (character.js applyRaceBonuses)
-    bonus: { ANY: +2 },
+    // ALL: +2 applies to all stats (character.js applyRaceBonuses)
+    bonus: { ALL: +2 },
     tags: ["versatile"],
     unlock: "default",
   },
