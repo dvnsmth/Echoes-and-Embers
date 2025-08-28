@@ -25,6 +25,14 @@ function hpbar(current, max) {
   return `<div class="hpbar"><div style="width:${pct}%"></div></div>`;
 }
 const nameOf = (x) => x?.name ?? "—";
+// Normalized enemy name + HP readers (accept old/new shapes)
+const foeName = (en) => en?.name || en?.key || "Enemy";
+const foeHP = (en) => {
+  const max = Number(en?.maxHP ?? en?.hpMax ?? en?.hp ?? 1);
+  const cur = Number(en?.hp ?? en?.hpCurrent ?? max);
+  return { cur, max };
+};
+
 
 // ---------- normalize foes (accept defs or instances) ----------
 function normalizeFoes(maybeDefsOrFoes = []) {
@@ -169,34 +177,16 @@ export const Combat = {
   },
 
   // ---------- helpers ----------
-  livingAllies()  { return (State.party || []).filter(c => c.hp > 0); },
-  livingEnemies() { return (this.active?.enemies || []).filter(e => (e.hpCurrent ?? e.hp) > 0); },
+livingAllies() { return (State.party || []).filter(c => c.hp > 0); },
+livingEnemies() { return (this.active?.enemies || []).filter(e => foeHP(e).cur > 0); },
 
-  damageFoe(foe, n) {
-    foe.hpMax = foe.hpMax ?? foe.hp ?? 1;
-    foe.hpCurrent = Math.max(0, Math.min(foe.hpMax, (foe.hpCurrent ?? foe.hpMax) - (n | 0)));
-  },
+damageFoe(foe, n) {
+  foe.hpMax = foe.hpMax ?? foe.hp ?? 1;
+  foe.hpCurrent = Math.max(0, Math.min(foe.hpMax, (foe.hpCurrent ?? foe.hpMax) - (n | 0)));
+  foe.hp = foe.hpCurrent; // mirror for any UI that still reads hp
+},
 
   // ---------- ATB loop ----------
-  _bootLoop() {
-    let last = performance.now();
-    const tick = (now) => {
-      if (!this.active) return;
-      const dt = (now - last) / 1000;
-      last = now;
-
-      this._atb.tick(dt);
-
-      if (!this._currentEnt && this._atb.hasTurnReady()) {
-        const ent = this._atb.popTurn();
-        this._beginTurn(ent);
-      }
-
-      requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  },
-
   _beginTurn(ent) {
     this._currentEnt = ent;
     this.active.turnCount++;
@@ -205,28 +195,28 @@ export const Combat = {
       const ch = State.party.find(p => p.id === ent.id);
       this._currentChar = ch;
       ch.ap = ent.ap;
+
       this.render();
+      this.renderActions();                 // E1: paint buttons now
       this.updateIndicators(ent);
       this.log(`Your turn: ${ch.name} (AP ${ch.ap})`);
+
     } else {
       const en = this.active.enemies.find(e => e.id === ent.id);
+      const { cur } = foeHP(en || {});
+      if (!en || cur <= 0) return this._endTurn(0);  // skip dead/invalid foe
+
       this._currentChar = en;
       en.ap = ent.ap;
+
       this.render();
       this.updateIndicators(ent);
-      setTimeout(() => this.enemyAct(en), (window.Settings?.data?.reduced) ? 0 : 260);
+      setTimeout(() => this.enemyAct(en),
+        (window.Settings?.data?.reduced) ? 0 : 260
+      );
     }
   },
 
-  _endTurn(carry = 0) {
-    if (!this._currentEnt) return;
-    this._atb.endTurn(this._currentEnt, { carry });
-    this._currentEnt = null;
-    this._currentChar = null;
-
-    this.checkEnd();
-    if (this.active) this.render();
-  },
 
   // ---------- UI ----------
   render() {
@@ -248,19 +238,18 @@ export const Combat = {
       pWrap?.appendChild(row);
     });
 
-    // Enemies
-    active.enemies.forEach(en => {
-      const hpMax = en.hpMax ?? en.hp ?? 1;
-      const hpCur = en.hpCurrent ?? en.hp ?? hpMax;
-      const row = document.createElement("div");
-      row.className = "stat";
-      row.dataset.id = en.id; row.dataset.side = "enemy";
-      row.innerHTML = `<div><b>${en.emoji ?? "👾"} ${en.name || en.key}</b>${hpbar(hpCur, hpMax)}</div><span>HP ${hpCur}/${hpMax}</span>`;
-      eWrap?.appendChild(row);
-    });
+   // Enemies
+active.enemies.forEach(en => {
+  const { cur: hpCur, max: hpMax } = foeHP(en);
+  const row = document.createElement("div");
+  row.className = "stat";
+  row.dataset.id = en.id; row.dataset.side = "enemy";
+  row.innerHTML = `<div><b>${en.emoji ?? "👾"} ${foeName(en)}</b>${hpbar(hpCur, hpMax)}</div><span>HP ${hpCur}/${hpMax}</span>`;
+  eWrap?.appendChild(row);
+});
 
-    this.renderActions();
-  },
+this.renderActions();
+},
 
   updateIndicators(ent = this._currentEnt) {
     const ti = document.getElementById("turn-indicator");
@@ -285,7 +274,7 @@ export const Combat = {
   renderActions() {
     const wrap = document.getElementById("combat-actions");
     if (!wrap || !this._currentEnt) return;
-
+    wrap.innerHTML = "";   
     if (this._currentEnt.side === "enemy") return;
 
     const ch = this._currentChar;
@@ -333,8 +322,9 @@ export const Combat = {
   chooseTarget(ch, apCost = 1) {
     const wrap = document.getElementById("combat-actions"); wrap.innerHTML = "";
     this.livingEnemies().forEach(en => {
-      wrap.appendChild(actionBtn(`→ Hit ${en.name || en.key}`, () => this.doAttack(ch, en, apCost)));
-    });
+  wrap.appendChild(actionBtn(`→ Hit ${foeName(en)}`, () => this.doAttack(ch, en, apCost)));
+});
+
     wrap.appendChild(actionBtn("Back", () => this.renderActions()));
   },
 
@@ -366,18 +356,26 @@ export const Combat = {
     switch (name) {
       case "Power Strike": {
         const cost = 2;
-        if ((ch.ap | 0) < cost) { Notifier.toast("Not enough AP."); return this.renderActions(); }
+        if ((ch.ap | 0) < cost) { Notifier.toast("Not enough AP."); 
+          return this.renderActions(); }
         return this._targetEnemy(ch, (en) => {
           const { damage, crit } = physDamage(
             { atk: ch.getDerived().PAtk, dmg: [2, 6], side: "ally" },
             { def: en.def ?? 0, dmg: en.dmg || [1,4], side: "enemy" },
             1.25
           );
-          this.damageFoe(en, damage);
-          this._bumpDamage(ch.id, en.id, damage);
-          try { AudioManager.play?.("hit"); } catch {}
-          this.log(`${ch.name} uses Power Strike for ${damage}${crit ? " (CRIT)" : ""}.`);
-          ch.ap -= cost; this.render(); (ch.ap <= 0) ? this._endTurn(0) : this.renderActions();
+         this.damageFoe(en, damage);
+if (this.checkEnd()) return;                // end right after the hit
+
+this._bumpDamage(ch.id, en.id, damage);
+try { AudioManager.play?.("hit"); } catch {}
+this.log(`${ch.name} uses Power Strike for ${damage}${crit ? " (CRIT)" : ""}.`);
+
+ch.ap -= cost;
+this.render();
+if (this.checkEnd()) return;                // safety: if victory after render
+(ch.ap <= 0) ? this._endTurn(0) : this.renderActions();
+
         });
       }
 
@@ -391,10 +389,17 @@ export const Combat = {
             1.2
           );
           this.damageFoe(en, damage);
-          this._bumpDamage(ch.id, en.id, damage);
-          try { AudioManager.play?.("hit"); } catch {}
-          this.log(`${ch.name} casts Firebolt for ${damage}${crit ? " (CRIT)" : ""}.`);
-          ch.ap -= cost; this.render(); (ch.ap <= 0) ? this._endTurn(0) : this.renderActions();
+if (this.checkEnd()) return;                // end right after the hit
+
+this._bumpDamage(ch.id, en.id, damage);
+try { AudioManager.play?.("hit"); } catch {}
+this.log(`${ch.name} uses Power Strike for ${damage}${crit ? " (CRIT)" : ""}.`);
+
+ch.ap -= cost;
+this.render();
+if (this.checkEnd()) return;                // safety: if victory after render
+(ch.ap <= 0) ? this._endTurn(0) : this.renderActions();
+
         });
       }
 
@@ -418,11 +423,14 @@ export const Combat = {
     }
   },
 
-  _targetEnemy(ch, fn) {
-    const wrap = document.getElementById("combat-actions"); wrap.innerHTML = "";
-    this.livingEnemies().forEach(en => wrap.appendChild(actionBtn(`→ ${en.name || en.key}`, () => fn(en))));
-    wrap.appendChild(actionBtn("Back", () => this.renderActions()));
-  },
+ _targetEnemy(ch, fn) {
+  const wrap = document.getElementById("combat-actions");
+  wrap.innerHTML = "";
+  this.livingEnemies().forEach(en => {
+    wrap.appendChild(actionBtn(`→ ${foeName(en)}`, () => fn(en)));
+  });
+  wrap.appendChild(actionBtn("Back", () => this.renderActions()));
+},
 
   // ---------- basic attack ----------
   doAttack(attacker, target, apCost = 1) {
@@ -442,7 +450,8 @@ export const Combat = {
 
     attacker.ap -= apCost;
     this.render();
-    if (attacker.ap <= 0) this._endTurn(0); else this.renderActions();
+if (this.checkEnd()) return;              // ← add this
+if (attacker.ap <= 0) this._endTurn(0); else this.renderActions();
   },
 
   // ---------- enemy AI ----------
@@ -470,41 +479,48 @@ export const Combat = {
       if (target.hp <= 0) break;
     }
 
-    this.render();
-    this._endTurn(0);
+this.render();
+if (this.checkEnd()) return;              // <- D3
+this._endTurn(0);
   },
 
   // ---------- end / rewards ----------
-  checkEnd() {
-    const allies = this.livingAllies();
-    const foes = this.livingEnemies();
+checkEnd() {
+  const allies = this.livingAllies();
+  const foes   = this.livingEnemies();
 
-    if (allies.length === 0) {
-      this.log("Your party falls…");
-      Notifier.toast("Defeat.");
-      try { AudioManager.play?.("defeat"); } catch {}
-      this.active = null;
-      Storage.save();
-      return;
-    }
-    if (foes.length === 0) {
-      const xp = Utils.rand(30, 60);
-      const gold = Utils.rand(5, 12);
-      const loot = [];
-      if (Utils.rand(1, 100) <= 30) {
-        addItem("minor_tonic", 1);
-        loot.push("Minor Tonic ×1");
-      }
-      addGold(gold);
-      grantXP(xp);
-      Storage.save();
+  // Defeat
+  if (allies.length === 0) {
+    this.log("Your party falls…");
+    Notifier.toast("Defeat.");
+    try { AudioManager.play?.("defeat"); } catch {}
+    this.active = null;            // ← important
+    Storage.save();
+    return true;                   // ← ended
+  }
 
-      this._lastRewards = { xp, gold, loot };
-      try { AudioManager.play?.("victory"); } catch {}
-      this.showPostBattleSummary();
-      return;
+  // Victory
+  if (foes.length === 0) {
+    const xp   = Utils.rand(30, 60);
+    const gold = Utils.rand(5, 12);
+    const loot = [];
+    if (Utils.rand(1, 100) <= 30) {
+      addItem("minor_tonic", 1);
+      loot.push("Minor Tonic ×1");
     }
-  },
+    addGold(gold);
+    grantXP(xp);
+    Storage.save();
+
+    this._lastRewards = { xp, gold, loot };
+    try { AudioManager.play?.("victory"); } catch {}
+    this.active = null;            // ← important: stop the loop immediately
+    this.showPostBattleSummary();
+    return true;                   // ← ended
+  }
+
+  return false;                    // battle continues
+},
 
   showPostBattleSummary() {
     const ov = document.getElementById("postbattle-overlay");
