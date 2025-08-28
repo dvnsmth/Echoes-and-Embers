@@ -103,31 +103,40 @@ export function rollEncounter({
   return picked;
 }
 
+// Top of file already has: import { ENEMIES, ENEMY_LIST, enemiesFor, TIER, tiersForPartyLevel } from "../../data/enemies.js";
+
 export function instantiateEncounter(enemyDefs = []) {
-  return enemyDefs.map((def, idx) => ({
-    id: `foe_${slug(def.key)}_${Date.now().toString(36)}_${idx}`,
-    key: def.key,
-    name: def.key,
-    family: def.family,
-    tier: def.tier,
-    level: def.level,
-    ai: def.ai,
-    emoji: def.emoji,
-    hpMax: def.hp,
-    hpCurrent: def.hp,
-    atk: def.atk,
-    def: def.def,
-    dmg: Array.isArray(def.dmg) ? [...def.dmg] : [1, 4],
-    moves: (def.moves || []).map(m => ({ ...m })),
-    status: [],
-    cooldowns: {},
-  }));
+  return enemyDefs.map((def, idx) => {
+    // Prefer def.name, then the catalog name, then key
+    const catalog = ENEMIES?.[def.key] || null;
+    const safeName = def.name || catalog?.name || def.key;
+
+    return {
+      id: `foe_${slug(def.key)}_${Date.now().toString(36)}_${idx}`,
+      key: def.key,
+      name: safeName,
+      family: def.family ?? catalog?.family,
+      tier: def.tier   ?? catalog?.tier,
+      level: def.level ?? catalog?.level ?? 1,
+      ai: def.ai       ?? catalog?.ai,
+      emoji: def.emoji ?? catalog?.emoji,
+      hpMax: def.hp    ?? catalog?.hp ?? 1,
+      hpCurrent: def.hp ?? catalog?.hp ?? 1,
+      atk: def.atk     ?? catalog?.atk ?? 3,
+      def: def.def     ?? catalog?.def ?? 0,
+      dmg: Array.isArray(def.dmg) ? [...def.dmg] : (catalog?.dmg || [1, 4]),
+      moves: (def.moves || catalog?.moves || []).map(m => ({ ...m })),
+      status: [],
+      cooldowns: {},
+    };
+  });
 }
+
 
 export function collapseEncounter(enemyDefs = []) {
   const map = new Map();
   for (const e of enemyDefs) {
-    const k = e.key;
+    const k = e.key || e.name || "Unknown";
     if (!map.has(k)) map.set(k, { key: k, count: 0, tier: e.tier, level: e.level, emoji: e.emoji });
     map.get(k).count++;
   }
