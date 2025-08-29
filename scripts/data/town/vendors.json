@@ -1,0 +1,11 @@
+{
+  "market": {
+    "1": ["potion_small", "antidote", "rope"],
+    "2": ["potion_small", "potion_medium", "oil_flask", "bomb"]
+  },
+  "blacksmith": {
+    "0": [],
+    "1": ["iron_sword", "hunting_bow"],
+    "2": ["steel_sword", "oak_bow"]
+  }
+}

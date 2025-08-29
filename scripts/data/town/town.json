@@ -1,0 +1,13 @@
+{
+  "name": "Stonefall",
+  "flavor": "A frontier hub where caravans meet cold cliffs.",
+  "start": {
+    "buildings": { "square": 1, "inn": 1, "market": 1, "blacksmith": 0, "temple": 0, "gate": 1 },
+    "vendorTiers": { "market": 1, "blacksmith": 0 },
+    "flags": { "reviveEnabled": false }
+  },
+  "services": {
+    "inn":    { "restType": "inn",    "desc": "Recover most HP and remove fatigue." },
+    "temple": { "restType": "temple", "desc": "Full heal and cleanse curses/poisons." }
+  }
+}

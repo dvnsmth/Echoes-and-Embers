@@ -1,0 +1,43 @@
+{
+  "square": {
+    "name": "Town Square",
+    "tiers": {
+      "1": { "desc": "The beating heart of Stonefall.", "effects": { "unlock": ["notice_board"] } }
+    }
+  },
+  "inn": {
+    "name": "The Cliffside Inn",
+    "tiers": {
+      "1": { "desc": "Basic lodging.",   "cost": { "gold": 0 },  "effects": { "rest": "inn", "koPenaltyPct": 100 } },
+      "2": { "desc": "Comfort rooms.",   "cost": { "gold": 200 }, "effects": { "rest": "inn", "koPenaltyPct": 50 } }
+    }
+  },
+  "market": {
+    "name": "Market",
+    "tiers": {
+      "1": { "desc": "General goods.",   "effects": { "vendorTier": { "market": 1 } } },
+      "2": { "desc": "Wider selection.", "effects": { "vendorTier": { "market": 2 } } }
+    }
+  },
+  "blacksmith": {
+    "name": "Blacksmith",
+    "tiers": {
+      "0": { "desc": "Closed.", "requirements": { "quest": "LostCanyon:3" } },
+      "1": { "desc": "Basic forging.", "effects": { "vendorTier": { "blacksmith": 1 }, "unlock": ["repair", "craft_t1"] } },
+      "2": { "desc": "Hardened steel.", "effects": { "vendorTier": { "blacksmith": 2 }, "discountPct": 5, "unlock": ["craft_t2"] } }
+    }
+  },
+  "temple": {
+    "name": "Temple",
+    "tiers": {
+      "0": { "desc": "Ruined shrine." },
+      "1": { "desc": "Restored altar.", "effects": { "rest": "temple", "flag": ["reviveEnabled"] } }
+    }
+  },
+  "gate": {
+    "name": "North Gate",
+    "tiers": {
+      "1": { "desc": "Leads to the wilds.", "effects": { "unlock": ["adventure_board"] } }
+    }
+  }
+}

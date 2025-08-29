@@ -35,4 +35,18 @@ export { market } from "./market.js";
 export { gate } from "./gate.js";
 export { blacksmith } from "./blacksmith.js";
 
+// Auto-refresh simple screens on key events
+on(EV.BuildingUpgraded, () => refreshIfVisible());
+on(EV.RewardsGranted,   () => refreshIfVisible());
+on(EV.RegionUnlocked,   () => refreshIfVisible());
+
+function refreshIfVisible(){
+  // If you have a simple router, check current screen and call its show()
+  // Example (pseudo):
+  // if (UI.current === "market") Market.show();
+  // else if (UI.current === "blacksmith") Blacksmith.show();
+  // else if (UI.current === "inn") Inn.show();
+  void getTown(); // noop to assert import usage
+}
+
 export default Town;

@@ -1,8 +1,13 @@
+
+//need to match new version of vendor and state
+
 // /scripts/town/market.js
 import { panelLog, actionsEl, btn } from "./helpers.js";
 import { Notifier } from "../systems/state.js";
 import { spendGold } from "../systems/party.js";
 import { addItem, getItemData, priceOf } from "../systems/inventory.js";
+
+
 
 // Choose what this vendor sells (IDs from data/)
 const MARKET_STOCK = ["minor_tonic", "torch", "sturdy_rope"];
