@@ -5,12 +5,18 @@
     "type": "weapon",
     "slot": "weapon",
     "hands": 1,
-    "icon": "⚔️",
+    "icon": "\u2694\ufe0f",
     "price": 20,
     "rarity": "common",
-    "dmg": [2, 6],
+    "dmg": [
+      2,
+      6
+    ],
     "atk": 1,
-    "tags": ["sword", "melee"],
+    "tags": [
+      "sword",
+      "melee"
+    ],
     "description": "A well-balanced blade favored by militia."
   },
   "dagger": {
@@ -19,12 +25,18 @@
     "type": "weapon",
     "slot": "weapon",
     "hands": 1,
-    "icon": "🗡️",
+    "icon": "\ud83d\udde1\ufe0f",
     "price": 8,
     "rarity": "common",
-    "dmg": [1, 4],
+    "dmg": [
+      1,
+      4
+    ],
     "crit": 5,
-    "tags": ["light", "melee"],
+    "tags": [
+      "light",
+      "melee"
+    ],
     "description": "Quick and quiet. Favored by scouts."
   },
   "hunting_bow": {
@@ -33,13 +45,859 @@
     "type": "weapon",
     "slot": "weapon",
     "hands": 2,
-    "icon": "🏹",
+    "icon": "\ud83c\udff9",
     "price": 24,
     "rarity": "common",
-    "dmg": [2, 6],
+    "dmg": [
+      2,
+      6
+    ],
     "atk": 1,
-    "tags": ["bow", "ranged"],
-    "req": { "DEX": 12 },
-    "description": "A flexible yew bow fit for small game—and bandits."
+    "tags": [
+      "bow",
+      "ranged"
+    ],
+    "req": {
+      "DEX": 12
+    },
+    "description": "A flexible yew bow fit for small game\u2014and bandits."
+  },
+  "short_sword": {
+    "id": "short_sword",
+    "name": "Short Sword",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83d\udde1\ufe0f",
+    "price": 18,
+    "rarity": "common",
+    "dmg": [
+      2,
+      5
+    ],
+    "atk": 1,
+    "tags": [
+      "sword",
+      "melee"
+    ],
+    "description": "Compact blade for close combat."
+  },
+  "long_sword": {
+    "id": "long_sword",
+    "name": "Longsword",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\u2694\ufe0f",
+    "price": 40,
+    "rarity": "uncommon",
+    "dmg": [
+      3,
+      7
+    ],
+    "atk": 2,
+    "tags": [
+      "sword",
+      "melee"
+    ],
+    "req": {
+      "STR": 12
+    },
+    "description": "A knight\u2019s blade with reach and weight."
+  },
+  "greatsword": {
+    "id": "greatsword",
+    "name": "Greatsword",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 2,
+    "icon": "\ud83d\udde1\ufe0f",
+    "price": 70,
+    "rarity": "uncommon",
+    "dmg": [
+      4,
+      10
+    ],
+    "atk": 3,
+    "tags": [
+      "sword",
+      "melee",
+      "heavy"
+    ],
+    "req": {
+      "STR": 14
+    },
+    "description": "A massive blade that cleaves through armor."
+  },
+  "battle_axe": {
+    "id": "battle_axe",
+    "name": "Battle Axe",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83e\ude93",
+    "price": 42,
+    "rarity": "uncommon",
+    "dmg": [
+      3,
+      8
+    ],
+    "atk": 2,
+    "tags": [
+      "axe",
+      "melee"
+    ],
+    "req": {
+      "STR": 12
+    },
+    "description": "Broad-edged axe meant for war."
+  },
+  "hand_axe": {
+    "id": "hand_axe",
+    "name": "Hand Axe",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83e\ude93",
+    "price": 16,
+    "rarity": "common",
+    "dmg": [
+      2,
+      5
+    ],
+    "tags": [
+      "axe",
+      "melee",
+      "light"
+    ],
+    "description": "Small axe for skirmish and camp chores."
+  },
+  "greataxe": {
+    "id": "greataxe",
+    "name": "Greataxe",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 2,
+    "icon": "\ud83e\ude93",
+    "price": 68,
+    "rarity": "uncommon",
+    "dmg": [
+      5,
+      11
+    ],
+    "atk": 3,
+    "tags": [
+      "axe",
+      "melee",
+      "heavy"
+    ],
+    "req": {
+      "STR": 14
+    },
+    "description": "Two-handed axe that bites deep."
+  },
+  "war_hammer": {
+    "id": "war_hammer",
+    "name": "War Hammer",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83d\udd28",
+    "price": 44,
+    "rarity": "uncommon",
+    "dmg": [
+      3,
+      8
+    ],
+    "atk": 2,
+    "tags": [
+      "hammer",
+      "melee",
+      "bludgeoning"
+    ],
+    "req": {
+      "STR": 12
+    },
+    "description": "Hefty head designed to crush plate."
+  },
+  "mace": {
+    "id": "mace",
+    "name": "Mace",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83d\udd28",
+    "price": 25,
+    "rarity": "common",
+    "dmg": [
+      2,
+      6
+    ],
+    "tags": [
+      "bludgeoning",
+      "melee"
+    ],
+    "description": "A spiked club that dents armor."
+  },
+  "morningstar": {
+    "id": "morningstar",
+    "name": "Morningstar",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83d\udd17",
+    "price": 38,
+    "rarity": "uncommon",
+    "dmg": [
+      3,
+      7
+    ],
+    "tags": [
+      "bludgeoning",
+      "piercing",
+      "melee"
+    ],
+    "req": {
+      "STR": 11
+    },
+    "description": "Spiked head on a sturdy haft."
+  },
+  "spear": {
+    "id": "spear",
+    "name": "Spear",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83c\udfaf",
+    "price": 18,
+    "rarity": "common",
+    "dmg": [
+      2,
+      6
+    ],
+    "tags": [
+      "piercing",
+      "melee"
+    ],
+    "description": "Simple and reliable with good reach."
+  },
+  "pike": {
+    "id": "pike",
+    "name": "Pike",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 2,
+    "icon": "\ud83e\ude99",
+    "price": 36,
+    "rarity": "common",
+    "dmg": [
+      3,
+      7
+    ],
+    "tags": [
+      "piercing",
+      "melee",
+      "reach"
+    ],
+    "req": {
+      "STR": 11
+    },
+    "description": "Long reach, ideal for keeping foes at bay."
+  },
+  "halberd": {
+    "id": "halberd",
+    "name": "Halberd",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 2,
+    "icon": "\ud83e\ude93",
+    "price": 60,
+    "rarity": "uncommon",
+    "dmg": [
+      4,
+      9
+    ],
+    "atk": 2,
+    "tags": [
+      "axe",
+      "piercing",
+      "melee",
+      "reach"
+    ],
+    "req": {
+      "STR": 13
+    },
+    "description": "Polearm combining axe blade and spear tip."
+  },
+  "quarterstaff": {
+    "id": "quarterstaff",
+    "name": "Quarterstaff",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 2,
+    "icon": "\ud83e\udd62",
+    "price": 10,
+    "rarity": "common",
+    "dmg": [
+      1,
+      6
+    ],
+    "tags": [
+      "bludgeoning",
+      "melee",
+      "focus"
+    ],
+    "description": "A hardwood staff balanced for defense."
+  },
+  "wizard_staff": {
+    "id": "wizard_staff",
+    "name": "Wizard\u2019s Staff",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 2,
+    "icon": "\ud83e\ude84",
+    "price": 85,
+    "rarity": "rare",
+    "dmg": [
+      2,
+      6
+    ],
+    "atk": 1,
+    "tags": [
+      "staff",
+      "focus",
+      "magic"
+    ],
+    "req": {
+      "INT": 12
+    },
+    "description": "Conduit for arcane power."
+  },
+  "oak_wand": {
+    "id": "oak_wand",
+    "name": "Oak Wand",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83e\ude84",
+    "price": 30,
+    "rarity": "common",
+    "dmg": [
+      1,
+      4
+    ],
+    "tags": [
+      "wand",
+      "focus",
+      "magic"
+    ],
+    "req": {
+      "INT": 10
+    },
+    "description": "Simple wand used by apprentices."
+  },
+  "fire_wand": {
+    "id": "fire_wand",
+    "name": "Fire Wand",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83d\udd25",
+    "price": 95,
+    "rarity": "rare",
+    "dmg": [
+      2,
+      5
+    ],
+    "tags": [
+      "wand",
+      "focus",
+      "magic",
+      "fire"
+    ],
+    "req": {
+      "INT": 12
+    },
+    "description": "Crackles with cinders; empowers fire skills."
+  },
+  "ice_staff": {
+    "id": "ice_staff",
+    "name": "Ice Staff",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 2,
+    "icon": "\u2744\ufe0f",
+    "price": 100,
+    "rarity": "rare",
+    "dmg": [
+      2,
+      6
+    ],
+    "tags": [
+      "staff",
+      "focus",
+      "magic",
+      "ice"
+    ],
+    "req": {
+      "INT": 12
+    },
+    "description": "Chilled core that aids frost spells."
+  },
+  "crossbow_light": {
+    "id": "crossbow_light",
+    "name": "Light Crossbow",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 2,
+    "icon": "\ud83c\udff9",
+    "price": 35,
+    "rarity": "common",
+    "dmg": [
+      3,
+      6
+    ],
+    "tags": [
+      "crossbow",
+      "ranged"
+    ],
+    "req": {
+      "DEX": 10
+    },
+    "description": "Easier to draw, quick to learn."
+  },
+  "crossbow_heavy": {
+    "id": "crossbow_heavy",
+    "name": "Heavy Crossbow",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 2,
+    "icon": "\ud83c\udff9",
+    "price": 65,
+    "rarity": "uncommon",
+    "dmg": [
+      4,
+      9
+    ],
+    "atk": 1,
+    "tags": [
+      "crossbow",
+      "ranged",
+      "heavy"
+    ],
+    "req": {
+      "DEX": 12,
+      "STR": 11
+    },
+    "description": "Powerful shots with a longer reload."
+  },
+  "throwing_knife": {
+    "id": "throwing_knife",
+    "name": "Throwing Knife",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83d\udd2a",
+    "price": 12,
+    "rarity": "common",
+    "dmg": [
+      1,
+      4
+    ],
+    "crit": 5,
+    "tags": [
+      "thrown",
+      "ranged",
+      "light"
+    ],
+    "req": {
+      "DEX": 11
+    },
+    "description": "Balanced for flight."
+  },
+  "javelin": {
+    "id": "javelin",
+    "name": "Javelin",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83c\udfaf",
+    "price": 14,
+    "rarity": "common",
+    "dmg": [
+      2,
+      5
+    ],
+    "tags": [
+      "thrown",
+      "ranged",
+      "piercing"
+    ],
+    "description": "Can be thrown or used at reach."
+  },
+  "sling": {
+    "id": "sling",
+    "name": "Sling",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 2,
+    "icon": "\ud83e\ude83",
+    "price": 6,
+    "rarity": "common",
+    "dmg": [
+      1,
+      6
+    ],
+    "tags": [
+      "ranged",
+      "bludgeoning"
+    ],
+    "description": "Simple weapon that launches stones."
+  },
+  "scimitar": {
+    "id": "scimitar",
+    "name": "Scimitar",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83d\udde1\ufe0f",
+    "price": 34,
+    "rarity": "uncommon",
+    "dmg": [
+      2,
+      6
+    ],
+    "crit": 3,
+    "tags": [
+      "sword",
+      "melee",
+      "light"
+    ],
+    "req": {
+      "DEX": 11
+    },
+    "description": "Curved blade that favors slashing speed."
+  },
+  "rapier": {
+    "id": "rapier",
+    "name": "Rapier",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83d\udde1\ufe0f",
+    "price": 48,
+    "rarity": "uncommon",
+    "dmg": [
+      2,
+      5
+    ],
+    "crit": 8,
+    "tags": [
+      "sword",
+      "melee",
+      "piercing",
+      "light"
+    ],
+    "req": {
+      "DEX": 13
+    },
+    "description": "Fencing blade built for precision strikes."
+  },
+  "claymore": {
+    "id": "claymore",
+    "name": "Claymore",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 2,
+    "icon": "\ud83d\udde1\ufe0f",
+    "price": 80,
+    "rarity": "rare",
+    "dmg": [
+      5,
+      12
+    ],
+    "atk": 3,
+    "tags": [
+      "sword",
+      "melee",
+      "heavy"
+    ],
+    "req": {
+      "STR": 15
+    },
+    "description": "Two-handed great blade of northern make."
+  },
+  "katana": {
+    "id": "katana",
+    "name": "Katana",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83d\udde1\ufe0f",
+    "price": 90,
+    "rarity": "rare",
+    "dmg": [
+      3,
+      7
+    ],
+    "crit": 10,
+    "tags": [
+      "sword",
+      "melee",
+      "light"
+    ],
+    "req": {
+      "DEX": 14
+    },
+    "description": "Razor edge for decisive cuts."
+  },
+  "glaive": {
+    "id": "glaive",
+    "name": "Glaive",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 2,
+    "icon": "\ud83e\ude93",
+    "price": 62,
+    "rarity": "uncommon",
+    "dmg": [
+      4,
+      8
+    ],
+    "tags": [
+      "melee",
+      "reach"
+    ],
+    "req": {
+      "STR": 12
+    },
+    "description": "Curved blade atop a long shaft."
+  },
+  "trident": {
+    "id": "trident",
+    "name": "Trident",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 2,
+    "icon": "\ud83d\udd31",
+    "price": 58,
+    "rarity": "uncommon",
+    "dmg": [
+      3,
+      8
+    ],
+    "tags": [
+      "piercing",
+      "melee",
+      "reach"
+    ],
+    "req": {
+      "STR": 12
+    },
+    "description": "Three-pronged spear favored by river wardens."
+  },
+  "flail": {
+    "id": "flail",
+    "name": "Flail",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83d\udd17",
+    "price": 46,
+    "rarity": "uncommon",
+    "dmg": [
+      3,
+      7
+    ],
+    "tags": [
+      "bludgeoning",
+      "melee"
+    ],
+    "req": {
+      "STR": 12
+    },
+    "description": "A spiked head on chain\u2014hard to block."
+  },
+  "whip": {
+    "id": "whip",
+    "name": "Whip",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83e\udea2",
+    "price": 22,
+    "rarity": "common",
+    "dmg": [
+      1,
+      4
+    ],
+    "tags": [
+      "melee",
+      "control",
+      "light"
+    ],
+    "req": {
+      "DEX": 12
+    },
+    "description": "Lashes foes and can disarm with skill."
+  },
+  "sickle": {
+    "id": "sickle",
+    "name": "Sickle",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83d\udd2a",
+    "price": 10,
+    "rarity": "common",
+    "dmg": [
+      1,
+      5
+    ],
+    "tags": [
+      "melee",
+      "light"
+    ],
+    "description": "Curved blade once meant for fields."
+  },
+  "cudgel": {
+    "id": "cudgel",
+    "name": "Cudgel",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83e\udd62",
+    "price": 6,
+    "rarity": "common",
+    "dmg": [
+      1,
+      6
+    ],
+    "tags": [
+      "bludgeoning",
+      "melee"
+    ],
+    "description": "A sturdy stick. Simple but effective."
+  },
+  "runeblade": {
+    "id": "runeblade",
+    "name": "Runeblade",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83d\udde1\ufe0f\u2728",
+    "price": 160,
+    "rarity": "rare",
+    "dmg": [
+      3,
+      8
+    ],
+    "atk": 2,
+    "tags": [
+      "sword",
+      "melee",
+      "magic"
+    ],
+    "req": {
+      "STR": 12,
+      "INT": 10
+    },
+    "description": "Inscribed with sigils that hum in battle."
+  },
+  "thunder_hammer": {
+    "id": "thunder_hammer",
+    "name": "Thunder Hammer",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 2,
+    "icon": "\u26a1\ud83d\udd28",
+    "price": 180,
+    "rarity": "epic",
+    "dmg": [
+      6,
+      12
+    ],
+    "atk": 3,
+    "tags": [
+      "hammer",
+      "melee",
+      "shock"
+    ],
+    "req": {
+      "STR": 16
+    },
+    "description": "Each strike cracks the air like a storm."
+  },
+  "frost_bow": {
+    "id": "frost_bow",
+    "name": "Frost Bow",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 2,
+    "icon": "\ud83c\udff9\u2744\ufe0f",
+    "price": 140,
+    "rarity": "rare",
+    "dmg": [
+      3,
+      8
+    ],
+    "tags": [
+      "bow",
+      "ranged",
+      "ice"
+    ],
+    "req": {
+      "DEX": 14
+    },
+    "description": "Arrows leave a chill trail; slows the struck."
+  },
+  "shadow_dagger": {
+    "id": "shadow_dagger",
+    "name": "Shadow Dagger",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 1,
+    "icon": "\ud83d\udde1\ufe0f\ud83c\udf11",
+    "price": 120,
+    "rarity": "rare",
+    "dmg": [
+      2,
+      5
+    ],
+    "crit": 12,
+    "tags": [
+      "light",
+      "melee",
+      "shadow"
+    ],
+    "req": {
+      "DEX": 14
+    },
+    "description": "Blade drinks the light; deadly from the dark."
+  },
+  "dragon_lance": {
+    "id": "dragon_lance",
+    "name": "Dragon Lance",
+    "type": "weapon",
+    "slot": "weapon",
+    "hands": 2,
+    "icon": "\ud83d\udc09\ud83d\udd31",
+    "price": 220,
+    "rarity": "epic",
+    "dmg": [
+      6,
+      13
+    ],
+    "atk": 3,
+    "tags": [
+      "piercing",
+      "melee",
+      "reach",
+      "dragon"
+    ],
+    "req": {
+      "STR": 15
+    },
+    "description": "Lance tipped with tempered dragonbone."
   }
 }

@@ -1,4 +1,15 @@
 {
+  "cloth_garments": {
+    "id": "cloth_garments",
+    "name": "Cloth Garments",
+    "type": "armor",
+    "slot": "armor",
+    "icon": "👕",
+    "price": 5,
+    "rarity": "common",
+    "mods": { "DEF": 1 },
+    "description": "Simple travel clothes. Offer little protection."
+  },
   "leather_armor": {
     "id": "leather_armor",
     "name": "Leather Armor",
@@ -32,18 +43,17 @@
     "mods": { "DEF": 3 },
     "description": "Thick animal hides stitched together."
   },
-  "bark armor": {
+  "bark_armor": {
     "id": "bark_armor",
     "name": "Bark Armor",
     "type": "armor",
     "slot": "armor",
-    "icon": "🥋",
+    "icon": "🌳",
     "price": 40,
     "rarity": "uncommon",
     "mods": { "DEF": 4 },
     "description": "Armor made from the bark of ancient trees."
   },
-
   "chain_shirt": {
     "id": "chain_shirt",
     "name": "Chain Shirt",
@@ -66,7 +76,74 @@
     "mods": { "DEF": 5 },
     "description": "Overlapping plates that trade weight for safety."
   },
-  
+  "breastplate": {
+    "id": "breastplate",
+    "name": "Breastplate",
+    "type": "armor",
+    "slot": "armor",
+    "icon": "🛡️",
+    "price": 80,
+    "rarity": "rare",
+    "mods": { "DEF": 6 },
+    "description": "Steel chest armor offering balanced defense."
+  },
+  "half_plate": {
+    "id": "half_plate",
+    "name": "Half Plate",
+    "type": "armor",
+    "slot": "armor",
+    "icon": "🛡️",
+    "price": 120,
+    "rarity": "rare",
+    "mods": { "DEF": 7 },
+    "description": "Compromise between full armor and mobility."
+  },
+  "full_plate": {
+    "id": "full_plate",
+    "name": "Full Plate",
+    "type": "armor",
+    "slot": "armor",
+    "icon": "🤺",
+    "price": 200,
+    "rarity": "epic",
+    "mods": { "DEF": 9 },
+    "description": "Heavy suit of plate for maximum protection."
+  },
+
+  "apprentice_robe": {
+    "id": "apprentice_robe",
+    "name": "Apprentice Robe",
+    "type": "armor",
+    "slot": "armor",
+    "icon": "🧙",
+    "price": 20,
+    "rarity": "common",
+    "mods": { "DEF": 1, "INT": 1 },
+    "description": "Cloth robe worn by novice spellcasters."
+  },
+  "adept_robe": {
+    "id": "adept_robe",
+    "name": "Adept Robe",
+    "type": "armor",
+    "slot": "armor",
+    "icon": "🧙",
+    "price": 45,
+    "rarity": "uncommon",
+    "mods": { "DEF": 2, "INT": 2 },
+    "description": "Enchanted robe to aid arcane study."
+  },
+  "archmage_robe": {
+    "id": "archmage_robe",
+    "name": "Archmage Robe",
+    "type": "armor",
+    "slot": "armor",
+    "icon": "🧙‍♂️",
+    "price": 150,
+    "rarity": "rare",
+    "mods": { "DEF": 3, "INT": 4, "WIS": 2 },
+    "description": "Flowing garment imbued with protective wards."
+  },
+
   "wooden_shield": {
     "id": "wooden_shield",
     "name": "Wooden Shield",
@@ -99,7 +176,138 @@
     "rarity": "rare",
     "mods": { "DEF": 4 },
     "description": "A solid steel shield that can withstand heavy attacks."
-  } 
+  },
+  "tower_shield": {
+    "id": "tower_shield",
+    "name": "Tower Shield",
+    "type": "shield",
+    "slot": "offhand",
+    "icon": "🛡️",
+    "price": 90,
+    "rarity": "rare",
+    "mods": { "DEF": 6 },
+    "description": "Enormous shield, covers most of the body."
+  },
+  "dragon_scale_shield": {
+    "id": "dragon_scale_shield",
+    "name": "Dragon Scale Shield",
+    "type": "shield",
+    "slot": "offhand",
+    "icon": "🐉",
+    "price": 180,
+    "rarity": "epic",
+    "mods": { "DEF": 8, "RES": 5 },
+    "description": "Forged from dragon scale. Resists elemental flames."
+  },
 
-
+  "bone_armor": {
+    "id": "bone_armor",
+    "name": "Bone Armor",
+    "type": "armor",
+    "slot": "armor",
+    "icon": "💀",
+    "price": 50,
+    "rarity": "uncommon",
+    "mods": { "DEF": 4 },
+    "description": "Macabre armor of carved bones."
+  },
+  "serpent_scale": {
+    "id": "serpent_scale",
+    "name": "Serpent Scale",
+    "type": "armor",
+    "slot": "armor",
+    "icon": "🐍",
+    "price": 95,
+    "rarity": "rare",
+    "mods": { "DEF": 5, "DEX": 1 },
+    "description": "Light scale armor, agile yet protective."
+  },
+  "crystal_mail": {
+    "id": "crystal_mail",
+    "name": "Crystal Mail",
+    "type": "armor",
+    "slot": "armor",
+    "icon": "💎",
+    "price": 160,
+    "rarity": "epic",
+    "mods": { "DEF": 8, "RES": 4 },
+    "description": "Mail infused with shimmering crystal."
+  },
+  "phoenix_guard": {
+    "id": "phoenix_guard",
+    "name": "Phoenix Guard",
+    "type": "armor",
+    "slot": "armor",
+    "icon": "🔥",
+    "price": 200,
+    "rarity": "legendary",
+    "mods": { "DEF": 9, "RES": 6 },
+    "description": "Armor of rebirth, radiates fiery aura."
+  },
+  "shadow_cloak": {
+    "id": "shadow_cloak",
+    "name": "Shadow Cloak",
+    "type": "armor",
+    "slot": "armor",
+    "icon": "🌑",
+    "price": 120,
+    "rarity": "rare",
+    "mods": { "DEF": 3, "LCK": 3 },
+    "description": "A cloak woven from shadows, aids stealth."
+  },
+  "frostmail": {
+    "id": "frostmail",
+    "name": "Frostmail",
+    "type": "armor",
+    "slot": "armor",
+    "icon": "❄️",
+    "price": 150,
+    "rarity": "rare",
+    "mods": { "DEF": 6, "RES": 3 },
+    "description": "Cold to the touch, guards against frost."
+  },
+  "storm_plate": {
+    "id": "storm_plate",
+    "name": "Storm Plate",
+    "type": "armor",
+    "slot": "armor",
+    "icon": "⚡",
+    "price": 180,
+    "rarity": "epic",
+    "mods": { "DEF": 8, "RES": 4 },
+    "description": "Plates that hum with static energy."
+  },
+  "stone_guard": {
+    "id": "stone_guard",
+    "name": "Stone Guard",
+    "type": "armor",
+    "slot": "armor",
+    "icon": "🪨",
+    "price": 100,
+    "rarity": "rare",
+    "mods": { "DEF": 7 },
+    "description": "Armor reinforced with basalt stone."
+  },
+  "warden_mail": {
+    "id": "warden_mail",
+    "name": "Warden Mail",
+    "type": "armor",
+    "slot": "armor",
+    "icon": "🦅",
+    "price": 140,
+    "rarity": "rare",
+    "mods": { "DEF": 7, "WIS": 2 },
+    "description": "Armor of the canyon wardens, protects and inspires."
+  },
+  "guardian_plate": {
+    "id": "guardian_plate",
+    "name": "Guardian Plate",
+    "type": "armor",
+    "slot": "armor",
+    "icon": "🛡️✨",
+    "price": 220,
+    "rarity": "legendary",
+    "mods": { "DEF": 10, "RES": 5 },
+    "description": "Worn by champions sworn to protect Stonefall."
+  }
 }

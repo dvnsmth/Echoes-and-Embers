@@ -1,40 +1,366 @@
 {
-  "minor_tonic": {
-    "id": "minor_tonic",
-    "name": "Minor Tonic",
+  "antidote": {
+    "id": "antidote",
+    "name": "Antidote",
     "type": "consumable",
-    "icon": "🧪",
+    "icon": "💊",
+    "price": 15,
+    "rarity": "common",
+    "effect": { "cleanse": ["Poisoned"] },
+    "description": "Neutralizes poison in the bloodstream."
+  },
+  "bandage": {
+    "id": "bandage",
+    "name": "Bandage",
+    "type": "consumable",
+    "icon": "🩹",
+    "price": 8,
+    "rarity": "common",
+    "effect": { "heal": 5, "cleanse": ["Bleeding"] },
+    "description": "Stops minor bleeding."
+  },
+  "bomb": {
+    "id": "bomb",
+    "name": "Fire Bomb",
+    "type": "consumable",
+    "icon": "💣",
+    "price": 25,
+    "rarity": "uncommon",
+    "effect": { "damage": { "type": "fire", "amount": 20 }, "tag": "explosive" },
+    "description": "Deals fire damage to all enemies. Ignites Oily targets."
+  },
+  "smoke_bomb": {
+    "id": "smoke_bomb",
+    "name": "Smoke Bomb",
+    "type": "consumable",
+    "icon": "🌫️",
+    "price": 20,
+    "rarity": "uncommon",
+    "effect": { "escape": true },
+    "description": "Obscures the field, allowing escape from most encounters."
+  },
+  "mana_dust": {
+    "id": "mana_dust",
+    "name": "Mana Dust",
+    "type": "consumable",
+    "icon": "✨",
+    "price": 30,
+    "rarity": "uncommon",
+    "effect": { "restoreAP": 2 },
+    "description": "A glittering dust that restores a small amount of AP."
+  },
+  "stamina_herb": {
+    "id": "stamina_herb",
+    "name": "Stamina Herb",
+    "type": "consumable",
+    "icon": "🌿",
+    "price": 12,
+    "rarity": "common",
+    "effect": { "cleanse": ["Exhausted"] },
+    "description": "Revitalizing herb used to counter fatigue."
+  },
+  "revive_scroll": {
+    "id": "revive_scroll",
+    "name": "Scroll of Revival",
+    "type": "consumable",
+    "icon": "📜",
+    "price": 200,
+    "rarity": "rare",
+    "effect": { "revive": true, "heal": 20 },
+    "description": "Revives a fallen ally with limited health."
+  },
+  "iron_sword": {
+    "id": "iron_sword",
+    "name": "Iron Sword",
+    "type": "weapon",
+    "icon": "🗡️",
+    "price": 50,
+    "rarity": "common",
+    "effect": { "atk": 3 },
+    "description": "A sturdy iron blade favored by mercenaries."
+  },
+  "oak_bow": {
+    "id": "oak_bow",
+    "name": "Oak Bow",
+    "type": "weapon",
+    "icon": "🏹",
+    "price": 60,
+    "rarity": "common",
+    "effect": { "atk": 2, "dex": 1 },
+    "description": "A simple bow carved from oak wood."
+  },
+  "steel_shield": {
+    "id": "steel_shield",
+    "name": "Steel Shield",
+    "type": "armor",
+    "icon": "🛡️",
+    "price": 75,
+    "rarity": "uncommon",
+    "effect": { "def": 3 },
+    "description": "Reliable shield that blocks incoming strikes."
+  },
+  "leather_armor": {
+    "id": "leather_armor",
+    "name": "Leather Armor",
+    "type": "armor",
+    "icon": "🥋",
+    "price": 40,
+    "rarity": "common",
+    "effect": { "def": 2 },
+    "description": "Light armor offering basic protection."
+  },
+  "amulet_of_luck": {
+    "id": "amulet_of_luck",
+    "name": "Amulet of Luck",
+    "type": "accessory",
+    "icon": "🍀",
+    "price": 120,
+    "rarity": "rare",
+    "effect": { "lck": 3 },
+    "description": "A charm said to bring fortune in dire moments."
+  },
+  "ring_of_vitality": {
+    "id": "ring_of_vitality",
+    "name": "Ring of Vitality",
+    "type": "accessory",
+    "icon": "💍",
+    "price": 150,
+    "rarity": "rare",
+    "effect": { "maxHp": 15 },
+    "description": "Grants additional vitality to the wearer."
+  },
+  "minor_rune_power": {
+    "id": "minor_rune_power",
+    "name": "Rune of Power",
+    "type": "rune",
+    "icon": "🔶",
+    "price": 200,
+    "rarity": "rare",
+    "effect": { "atk": 2 },
+    "description": "A small rune that increases attack power."
+  },
+  "minor_rune_focus": {
+    "id": "minor_rune_focus",
+    "name": "Rune of Focus",
+    "type": "rune",
+    "icon": "🔷",
+    "price": 200,
+    "rarity": "rare",
+    "effect": { "wis": 2 },
+    "description": "A rune that sharpens magical focus."
+  },
+  "iron_ore": {
+    "id": "iron_ore",
+    "name": "Iron Ore",
+    "type": "material",
+    "icon": "⛏️",
     "price": 5,
     "rarity": "common",
-    "effect": { "heal": 10 },
-    "description": "A modest restorative. Restores a bit of health."
+    "description": "Raw ore used by blacksmiths for crafting."
   },
-  "torch": {
-    "id": "torch",
-    "name": "Torch",
-    "type": "consumable",
-    "icon": "🔥",
-    "price": 2,
-    "rarity": "common",
-    "effect": { "light": true },
-    "description": "Burns for a while, pushing back the dark."
-  },
-  "sturdy_rope": {
-    "id": "sturdy_rope",
-    "name": "Sturdy Rope",
+  "timber": {
+    "id": "timber",
+    "name": "Timber",
     "type": "material",
-    "icon": "🪢",
-    "price": 3,
+    "icon": "🪵",
+    "price": 4,
     "rarity": "common",
-    "description": "Trusted by climbers and cautious adventurers."
+    "description": "Straight lumber harvested from the Charred Forest."
   },
-  "goblin_token": {
-    "id": "goblin_token",
-    "name": "Goblin Token",
+  "dragon_scale": {
+    "id": "dragon_scale",
+    "name": "Dragon Scale",
+    "type": "material",
+    "icon": "🐉",
+    "price": 300,
+    "rarity": "legendary",
+    "description": "A scale shed by an ancient dragon. Radiates power."
+  },
+  "mystic_ink": {
+    "id": "mystic_ink",
+    "name": "Mystic Ink",
+    "type": "material",
+    "icon": "🖋️",
+    "price": 40,
+    "rarity": "uncommon",
+    "description": "Ink infused with arcane reagents. Used for scrolls."
+  },
+  "blackstone_fragment": {
+    "id": "blackstone_fragment",
+    "name": "Blackstone Fragment",
     "type": "quest",
-    "icon": "🪙",
+    "icon": "🪨",
     "price": 0,
     "rarity": "quest",
-    "description": "A mark of truce from the Hollowroot goblins."
+    "description": "A shard from the cliffs near Stonefall."
+  },
+  "ancient_key": {
+    "id": "ancient_key",
+    "name": "Ancient Key",
+    "type": "quest",
+    "icon": "🗝️",
+    "price": 0,
+    "rarity": "quest",
+    "description": "Opens a sealed door in the Lost Canyon."
+  },
+  "beast_claw": {
+    "id": "beast_claw",
+    "name": "Beast Claw",
+    "type": "material",
+    "icon": "🐾",
+    "price": 20,
+    "rarity": "uncommon",
+    "description": "Claw taken from a wild beast. Used for weaponcraft."
+  },
+  "herbal_tonic": {
+    "id": "herbal_tonic",
+    "name": "Herbal Tonic",
+    "type": "consumable",
+    "icon": "🍵",
+    "price": 15,
+    "rarity": "common",
+    "effect": { "heal": 20, "cleanse": ["Exhausted"] },
+    "description": "A warm brew of restorative herbs."
+  },
+  "explorer_map": {
+    "id": "explorer_map",
+    "name": "Explorer’s Map",
+    "type": "quest",
+    "icon": "🗺️",
+    "price": 0,
+    "rarity": "quest",
+    "description": "Reveals hidden paths within dungeons."
+  },
+  "holy_symbol": {
+    "id": "holy_symbol",
+    "name": "Holy Symbol",
+    "type": "accessory",
+    "icon": "✝️",
+    "price": 80,
+    "rarity": "uncommon",
+    "effect": { "res": 5 },
+    "description": "A blessed symbol that wards against dark forces."
+  },
+  "frost_crystal": {
+    "id": "frost_crystal",
+    "name": "Frost Crystal",
+    "type": "material",
+    "icon": "❄️",
+    "price": 50,
+    "rarity": "uncommon",
+    "description": "Crystal infused with chilling energy."
+  },
+  "oil_flask": {
+    "id": "oil_flask",
+    "name": "Oil Flask",
+    "type": "consumable",
+    "icon": "🛢️",
+    "price": 6,
+    "rarity": "common",
+    "effect": { "apply": "Oily" },
+    "description": "Covers enemies in oil. Fire attacks deal bonus damage."
+  },
+  "elemental_shard": {
+    "id": "elemental_shard",
+    "name": "Elemental Shard",
+    "type": "material",
+    "icon": "🔮",
+    "price": 75,
+    "rarity": "rare",
+    "description": "A shard that hums with elemental resonance."
+  },
+  "beast_hide": {
+    "id": "beast_hide",
+    "name": "Beast Hide",
+    "type": "material",
+    "icon": "🐺",
+    "price": 12,
+    "rarity": "common",
+    "description": "Tough hide useful for armor crafting."
+  },
+  "spirit_charm": {
+    "id": "spirit_charm",
+    "name": "Spirit Charm",
+    "type": "accessory",
+    "icon": "🔔",
+    "price": 110,
+    "rarity": "rare",
+    "effect": { "wis": 2, "res": 3 },
+    "description": "Charm said to attract benevolent spirits."
+  },
+  "adventurers_pack": {
+    "id": "adventurers_pack",
+    "name": "Adventurer’s Pack",
+    "type": "material",
+    "icon": "🎒",
+    "price": 20,
+    "rarity": "common",
+    "description": "Contains essentials for any long journey."
+  },
+  "phoenix_feather": {
+    "id": "phoenix_feather",
+    "name": "Phoenix Feather",
+    "type": "quest",
+    "icon": "🪶",
+    "price": 0,
+    "rarity": "quest",
+    "description": "Glows faintly warm. Said to revive the dead."
+  },
+  "shadow_dust": {
+    "id": "shadow_dust",
+    "name": "Shadow Dust",
+    "type": "material",
+    "icon": "🌑",
+    "price": 60,
+    "rarity": "rare",
+    "description": "A dust that clings to light, used in dark enchantments."
+  },
+  "ancient_relic": {
+    "id": "ancient_relic",
+    "name": "Ancient Relic",
+    "type": "quest",
+    "icon": "🏺",
+    "price": 0,
+    "rarity": "quest",
+    "description": "A mysterious relic from the ruins of the Azure river valley."
+  },
+  "battle_horn": {
+    "id": "battle_horn",
+    "name": "Battle Horn",
+    "type": "consumable",
+    "icon": "📯",
+    "price": 30,
+    "rarity": "uncommon",
+    "effect": { "buff": "Haste", "duration": 2 },
+    "description": "Rallies the party, granting temporary Haste."
+  },
+  "training_manual": {
+    "id": "training_manual",
+    "name": "Training Manual",
+    "type": "quest",
+    "icon": "📖",
+    "price": 0,
+    "rarity": "quest",
+    "description": "Contains techniques for advanced combat training."
+  },
+  "dwarven_ale": {
+    "id": "dwarven_ale",
+    "name": "Dwarven Ale",
+    "type": "consumable",
+    "icon": "🍺",
+    "price": 10,
+    "rarity": "common",
+    "effect": { "buff": "Fortified", "duration": 2 },
+    "description": "A strong brew that bolsters defense."
+  },
+  "healing_salve": {
+    "id": "healing_salve",
+    "name": "Healing Salve",
+    "type": "consumable",
+    "icon": "🧴",
+    "price": 18,
+    "rarity": "common",
+    "effect": { "heal": 15 },
+    "description": "A salve applied to wounds for moderate healing."
   }
 }
