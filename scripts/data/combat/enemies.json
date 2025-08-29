@@ -1,0 +1,647 @@
+{
+  "Awakened Tree": {
+    "key": "Awakened Tree",
+    "family": "Plant",
+    "tier": "CHAMPION",
+    "level": 6,
+    "hp": 25,
+    "atk": 7,
+    "def": 16,
+    "dmg": [3, 10],
+    "ai": "random",
+    "emoji": "\ud83c\udf33 awakened tree",
+    "tags": ["forest"],
+    "moves": [
+      {"key": "slam", "name": "Slam", "type": "bludgeoning", "dmg": [3, 10]}
+    ]
+  },
+  "Bandit": {
+    "key": "Bandit",
+    "family": "Humanoid",
+    "tier": "NORMAL",
+    "level": 2,
+    "hp": 12,
+    "atk": 4,
+    "def": 12,
+    "dmg": [1, 6],
+    "ai": "random",
+    "emoji": "\ud83c\udff4\u200d\u2620\ufe0f bandit",
+    "tags": ["road", "camp"],
+    "moves": [
+      {"key": "slash", "name": "Slash", "type": "slashing", "dmg": [1, 6]}
+    ]
+  },
+  "Bandit Captain": {
+    "key": "Bandit Captain",
+    "family": "Humanoid",
+    "tier": "ELITE",
+    "level": 4,
+    "hp": 18,
+    "atk": 5,
+    "def": 14,
+    "dmg": [2, 8],
+    "ai": "random",
+    "emoji": "\ud83c\udff4\u200d\u2620\ufe0f Bandit Captain",
+    "tags": ["road", "camp"],
+    "moves": [
+      {"key": "slash", "name": "Slash", "type": "slashing", "dmg": [2, 8]},
+      {"key": "dirty_move", "name": "Dirty Move", "type": "slashing", "dmg": [3, 8]}
+    ]
+  },
+  "Banshee": {
+    "key": "Banshee",
+    "family": "Undead",
+    "tier": "ELITE",
+    "level": 5,
+    "hp": 14,
+    "atk": 5,
+    "def": 12,
+    "dmg": [2, 6],
+    "ai": "random",
+    "emoji": "\ud83d\udc7b banshee",
+    "tags": ["ruin", "night"],
+    "moves": [
+      {"key": "wail", "name": "Wail", "type": "psychic", "dmg": [3, 8]}
+    ]
+  },
+  "Bear": {
+    "key": "Bear",
+    "family": "Beast",
+    "tier": "ELITE",
+    "level": 4,
+    "hp": 18,
+    "atk": 5,
+    "def": 14,
+    "dmg": [2, 8],
+    "ai": "random",
+    "emoji": "\ud83d\udc3b bear",
+    "tags": ["forest"],
+    "moves": [
+      {"key": "maul", "name": "Maul", "type": "slashing", "dmg": [2, 8]}
+    ]
+  },
+  "Beholder": {
+    "key": "Beholder",
+    "family": "Aberration",
+    "tier": "BOSS",
+    "level": 11,
+    "hp": 40,
+    "atk": 10,
+    "def": 22,
+    "dmg": [6, 14],
+    "ai": "random",
+    "emoji": "\ud83d\udc41\ufe0f beholder",
+    "tags": ["dungeon", "boss"],
+    "moves": [
+      {"key": "eye_ray", "name": "Eye Ray", "type": "magical", "dmg": [7, 15]}
+    ]
+  },
+  "Black Dragon": {
+    "key": "Black Dragon",
+    "family": "Dragon",
+    "tier": "BOSS",
+    "level": 11,
+    "hp": 48,
+    "atk": 11,
+    "def": 21,
+    "dmg": [7, 15],
+    "ai": "random",
+    "emoji": "\ud83d\udc09 black dragon",
+    "tags": ["swamp", "boss"],
+    "moves": [
+      {"key": "claw", "name": "Claw", "type": "slashing", "dmg": [7, 15]},
+      {"key": "breath_acid", "name": "Acid Breath", "type": "acid", "dmg": [9, 18]}
+    ]
+  },
+  "Blizzard Beast": {
+    "key": "Blizzard Beast",
+    "family": "Beast",
+    "tier": "CHAMPION",
+    "level": 8,
+    "hp": 32,
+    "atk": 9,
+    "def": 17,
+    "dmg": [5, 11],
+    "ai": "random",
+    "emoji": "\u2744\ufe0f blizzard beast",
+    "tags": ["tundra"],
+    "moves": [
+      {"key": "frost_fang", "name": "Frost Fang", "type": "cold", "dmg": [5, 11]}
+    ]
+  },
+  "Bugbear": {
+    "key": "Bugbear",
+    "family": "Goblinoid",
+    "tier": "ELITE",
+    "level": 5,
+    "hp": 18,
+    "atk": 6,
+    "def": 14,
+    "dmg": [2, 8],
+    "ai": "random",
+    "emoji": "\ud83d\udc3b bugbear",
+    "tags": ["caves", "forest"],
+    "moves": [
+      {"key": "club", "name": "Club", "type": "bludgeoning", "dmg": [2, 8]}
+    ]
+  },
+  "Cave Spider": {
+    "key": "Cave Spider",
+    "family": "Beast",
+    "tier": "NORMAL",
+    "level": 2,
+    "hp": 12,
+    "atk": 3,
+    "def": 11,
+    "dmg": [1, 6],
+    "ai": "lowest",
+    "emoji": "\ud83d\udd77\ufe0f spider",
+    "tags": ["caves"],
+    "moves": [
+      {"key": "bite", "name": "Poison Bite", "type": "poison", "dmg": [2, 6]}
+    ]
+  },
+  "Dark Knight": {
+    "key": "Dark Knight",
+    "family": "Humanoid",
+    "tier": "CHAMPION",
+    "level": 9,
+    "hp": 40,
+    "atk": 8,
+    "def": 18,
+    "dmg": [4, 12],
+    "ai": "random",
+    "emoji": "\ud83d\udee1\ufe0f dark knight",
+    "tags": ["dungeon", "elite"],
+    "moves": [
+      {"key": "greatsword", "name": "Greatsword", "type": "slashing", "dmg": [4, 12]}
+    ]
+  },
+  "Demon": {
+    "key": "Demon",
+    "family": "Fiend",
+    "tier": "BOSS",
+    "level": 10,
+    "hp": 30,
+    "atk": 9,
+    "def": 20,
+    "dmg": [5, 12],
+    "ai": "random",
+    "emoji": "\ud83d\udc79 demon",
+    "tags": ["hell", "boss"],
+    "moves": [
+      {"key": "hellfire", "name": "Hellfire", "type": "fire", "dmg": [6, 13]}
+    ]
+  },
+  "DireWolf": {
+    "key": "DireWolf",
+    "family": "Beast",
+    "tier": "ELITE",
+    "level": 3,
+    "hp": 12,
+    "atk": 4,
+    "def": 12,
+    "dmg": [2, 5],
+    "ai": "random",
+    "emoji": "\ud83d\udc3a direwolf",
+    "tags": ["forest", "pack"],
+    "moves": [
+      {"key": "bite", "name": "Bite", "type": "piercing", "dmg": [2, 5]}
+    ]
+  },
+  "Ent": {
+    "key": "Ent",
+    "family": "Plant",
+    "tier": "BOSS",
+    "level": 9,
+    "hp": 35,
+    "atk": 9,
+    "def": 20,
+    "dmg": [5, 12],
+    "ai": "random",
+    "emoji": "\ud83c\udf33 ent",
+    "tags": ["forest", "ancient"],
+    "moves": [
+      {"key": "crush", "name": "Crush", "type": "bludgeoning", "dmg": [5, 12]}
+    ]
+  },
+  "Frost Giant": {
+    "key": "Frost Giant",
+    "family": "Giant",
+    "tier": "BOSS",
+    "level": 10,
+    "hp": 40,
+    "atk": 10,
+    "def": 20,
+    "dmg": [6, 14],
+    "ai": "random",
+    "emoji": "\ud83e\uddca frost giant",
+    "tags": ["tundra", "boss"],
+    "moves": [
+      {"key": "greataxe", "name": "Greataxe", "type": "slashing", "dmg": [6, 14]}
+    ]
+  },
+  "Giant Spider": {
+    "key": "Giant Spider",
+    "family": "Beast",
+    "tier": "CHAMPION",
+    "level": 6,
+    "hp": 20,
+    "atk": 5,
+    "def": 14,
+    "dmg": [2, 8],
+    "ai": "random",
+    "emoji": "\ud83d\udd77\ufe0f giant spider",
+    "tags": ["caves", "forest"],
+    "moves": [
+      {"key": "poison_bite", "name": "Poison Bite", "type": "poison", "dmg": [3, 8]},
+      {"key": "web", "name": "Web", "type": "web", "dmg": [4, 10]}
+    ]
+  },
+  "Gnoll": {
+    "key": "Gnoll",
+    "family": "Humanoid",
+    "tier": "NORMAL",
+    "level": 3,
+    "hp": 14,
+    "atk": 4,
+    "def": 12,
+    "dmg": [2, 6],
+    "ai": "random",
+    "emoji": "\ud83d\udc3a gnoll",
+    "tags": ["savanna"],
+    "moves": [
+      {"key": "bite", "name": "Bite", "type": "piercing", "dmg": [2, 6]}
+    ]
+  },
+  "Goblin": {
+    "key": "Goblin",
+    "family": "Goblinoid",
+    "tier": "NORMAL",
+    "level": 1,
+    "hp": 8,
+    "atk": 3,
+    "def": 10,
+    "dmg": [1, 4],
+    "ai": "lowest",
+    "emoji": "\ud83d\udde1\ufe0f goblin",
+    "tags": ["plains", "caves", "common"],
+    "moves": [
+      {"key": "stab", "name": "Stab", "type": "piercing", "dmg": [1, 4]},
+      {"key": "goblin_cry", "name": "Goblin Cry", "type": "psychic", "dmg": [2, 6]}
+    ]
+  },
+  "Goblin Captain": {
+    "key": "Goblin Captain",
+    "family": "Goblinoid",
+    "tier": "ELITE",
+    "level": 4,
+    "hp": 16,
+    "atk": 4,
+    "def": 12,
+    "dmg": [2, 5],
+    "ai": "random",
+    "emoji": "\ud83d\udc79 captain",
+    "tags": ["plains", "caves"],
+    "moves": [
+      {"key": "cunning_strike", "name": "Cunning Strike", "type": "slashing", "dmg": [3, 8]}
+    ]
+  },
+  "Hobgoblin": {
+    "key": "Hobgoblin",
+    "family": "Goblinoid",
+    "tier": "ELITE",
+    "level": 4,
+    "hp": 16,
+    "atk": 5,
+    "def": 14,
+    "dmg": [2, 6],
+    "ai": "random",
+    "emoji": "\ud83c\udff4\u200d\u2620\ufe0f hobgoblin",
+    "tags": ["plains", "warband"],
+    "moves": [
+      {"key": "sabre", "name": "Sabre", "type": "slashing", "dmg": [2, 6]}
+    ]
+  },
+  "Ice Drake": {
+    "key": "Ice Drake",
+    "family": "Dragon",
+    "tier": "CHAMPION",
+    "level": 9,
+    "hp": 36,
+    "atk": 10,
+    "def": 18,
+    "dmg": [6, 12],
+    "ai": "random",
+    "emoji": "\u2744\ufe0f ice drake",
+    "tags": ["tundra", "sky"],
+    "moves": [
+      {"key": "frost_breath", "name": "Frost Breath", "type": "cold", "dmg": [7, 13]}
+    ]
+  },
+  "Ice Elemental": {
+    "key": "Ice Elemental",
+    "family": "Elemental",
+    "tier": "CHAMPION",
+    "level": 8,
+    "hp": 35,
+    "atk": 9,
+    "def": 18,
+    "dmg": [5, 12],
+    "ai": "random",
+    "emoji": "\u2744\ufe0f ice elemental",
+    "tags": ["tundra"],
+    "moves": [
+      {"key": "glacial_fist", "name": "Glacial Fist", "type": "cold", "dmg": [5, 12]}
+    ]
+  },
+  "Imp": {
+    "key": "Imp",
+    "family": "Fiend",
+    "tier": "NORMAL",
+    "level": 2,
+    "hp": 8,
+    "atk": 4,
+    "def": 10,
+    "dmg": [1, 6],
+    "ai": "random",
+    "emoji": "\ud83d\udc7a imp",
+    "tags": ["hell", "skirmisher"],
+    "moves": [
+      {"key": "sting", "name": "Sting", "type": "poison", "dmg": [1, 6]}
+    ]
+  },
+  "Lich": {
+    "key": "Lich",
+    "family": "Undead",
+    "tier": "BOSS",
+    "level": 9,
+    "hp": 22,
+    "atk": 8,
+    "def": 18,
+    "dmg": [4, 10],
+    "ai": "random",
+    "emoji": "\ud83e\uddd9\u200d\u2642\ufe0f lich",
+    "tags": ["ruin", "boss"],
+    "moves": [
+      {"key": "doom_bolt", "name": "Doom Bolt", "type": "magical", "dmg": [5, 12]}
+    ]
+  },
+  "Mimic": {
+    "key": "Mimic",
+    "family": "Aberration",
+    "tier": "CHAMPION",
+    "level": 6,
+    "hp": 18,
+    "atk": 6,
+    "def": 12,
+    "dmg": [2, 8],
+    "ai": "random",
+    "emoji": "\ud83e\ude84 mimic",
+    "tags": ["dungeon", "trap"],
+    "moves": [
+      {"key": "adhesive_bite", "name": "Adhesive Bite", "type": "piercing", "dmg": [2, 8]}
+    ]
+  },
+  "Troll": {
+    "key": "Troll",
+    "family": "Giant",
+    "tier": "CHAMPION",
+    "level": 7,
+    "hp": 30,
+    "atk": 6,
+    "def": 16,
+    "dmg": [3, 10],
+    "ai": "random",
+    "emoji": "\ud83e\uddcc troll",
+    "tags": ["caves", "bridge"],
+    "moves": [
+      {"key": "club", "name": "Club", "type": "bludgeoning", "dmg": [3, 10]}
+    ]
+  },
+  "Orc": {
+    "key": "Orc",
+    "family": "Orc",
+    "tier": "ELITE",
+    "level": 3,
+    "hp": 15,
+    "atk": 4,
+    "def": 12,
+    "dmg": [2, 6],
+    "ai": "random",
+    "emoji": "\ud83d\udc7a orc",
+    "tags": ["warband"],
+    "moves": [
+      {"key": "power_attack", "name": "Power Attack", "type": "slashing", "dmg": [4, 10]}
+    ]
+  },
+  "Owlbear": {
+    "key": "Owlbear",
+    "family": "Beast",
+    "tier": "CHAMPION",
+    "level": 7,
+    "hp": 25,
+    "atk": 7,
+    "def": 16,
+    "dmg": [3, 10],
+    "ai": "random",
+    "emoji": "\ud83d\udc3b owlbear",
+    "tags": ["forest"],
+    "moves": [
+      {"key": "rend", "name": "Rend", "type": "slashing", "dmg": [3, 10]}
+    ]
+  },
+  "Shambling Mound": {
+    "key": "Shambling Mound",
+    "family": "Plant",
+    "tier": "CHAMPION",
+    "level": 8,
+    "hp": 28,
+    "atk": 8,
+    "def": 18,
+    "dmg": [4, 12],
+    "ai": "random",
+    "emoji": "\ud83c\udf3f shambling mound",
+    "tags": ["swamp"],
+    "moves": [
+      {"key": "engulf", "name": "Engulf", "type": "bludgeoning", "dmg": [4, 12]}
+    ]
+  },
+  "Skeleton": {
+    "key": "Skeleton",
+    "family": "Undead",
+    "tier": "NORMAL",
+    "level": 2,
+    "hp": 12,
+    "atk": 4,
+    "def": 12,
+    "dmg": [1, 6],
+    "ai": "random",
+    "emoji": "\ud83d\udc80 skeleton",
+    "tags": ["crypt"],
+    "moves": [
+      {"key": "shortsword", "name": "Shortsword", "type": "piercing", "dmg": [1, 6]}
+    ]
+  },
+  "Slime": {
+    "key": "Slime",
+    "family": "Ooze",
+    "tier": "NORMAL",
+    "level": 1,
+    "hp": 10,
+    "atk": 3,
+    "def": 10,
+    "dmg": [1, 4],
+    "ai": "lowest",
+    "emoji": "\ud83d\udfe2 slime",
+    "tags": ["caves", "tutorial"],
+    "moves": [
+      {"key": "pseudopod", "name": "Pseudopod", "type": "acid", "dmg": [1, 4]}
+    ]
+  },
+  "Snow Golem": {
+    "key": "Snow Golem",
+    "family": "Construct",
+    "tier": "CHAMPION",
+    "level": 7,
+    "hp": 30,
+    "atk": 8,
+    "def": 16,
+    "dmg": [4, 10],
+    "ai": "random",
+    "emoji": "\u2744\ufe0f snow golem",
+    "tags": ["tundra"],
+    "moves": [
+      {"key": "frost_slam", "name": "Frost Slam", "type": "cold", "dmg": [4, 10]}
+    ]
+  },
+  "Specter": {
+    "key": "Specter",
+    "family": "Undead",
+    "tier": "CHAMPION",
+    "level": 6,
+    "hp": 16,
+    "atk": 6,
+    "def": 14,
+    "dmg": [2, 8],
+    "ai": "random",
+    "emoji": "\ud83d\udc7b specter",
+    "tags": ["ruin", "night"],
+    "moves": [
+      {"key": "chill_touch", "name": "Chill Touch", "type": "necrotic", "dmg": [2, 8]}
+    ]
+  },
+  "Treant": {
+    "key": "Treant",
+    "family": "Plant",
+    "tier": "CHAMPION",
+    "level": 8,
+    "hp": 30,
+    "atk": 8,
+    "def": 18,
+    "dmg": [4, 12],
+    "ai": "random",
+    "emoji": "\ud83c\udf33 treant",
+    "tags": ["forest", "ancient"],
+    "moves": [
+      {"key": "branch_slam", "name": "Branch Slam", "type": "bludgeoning", "dmg": [4, 12]}
+    ]
+  },
+  "Vine Blight": {
+    "key": "Vine Blight",
+    "family": "Plant",
+    "tier": "ELITE",
+    "level": 5,
+    "hp": 22,
+    "atk": 7,
+    "def": 16,
+    "dmg": [4, 10],
+    "ai": "random",
+    "emoji": "\ud83c\udf3f vine blight",
+    "tags": ["forest", "swamp"],
+    "moves": [
+      {"key": "entangle", "name": "Entangle", "type": "poison", "dmg": [4, 10]}
+    ]
+  },
+  "White Dragon": {
+    "key": "White Dragon",
+    "family": "Dragon",
+    "tier": "BOSS",
+    "level": 12,
+    "hp": 50,
+    "atk": 12,
+    "def": 22,
+    "dmg": [8, 16],
+    "ai": "random",
+    "emoji": "\ud83d\udc09 white dragon",
+    "tags": ["tundra", "boss"],
+    "moves": [
+      {"key": "claw", "name": "Claw", "type": "slashing", "dmg": [8, 16]},
+      {"key": "breath_cold", "name": "Cold Breath", "type": "cold", "dmg": [10, 20]}
+    ]
+  },
+  "Will-o'-Wisp": {
+    "key": "Will-o'-Wisp",
+    "family": "Spirit",
+    "tier": "NORMAL",
+    "level": 2,
+    "hp": 6,
+    "atk": 5,
+    "def": 8,
+    "dmg": [1, 4],
+    "ai": "random",
+    "emoji": "\ud83c\udf2b\ufe0f wisp",
+    "tags": ["swamp", "night"],
+    "moves": [
+      {"key": "shock", "name": "Shock", "type": "lightning", "dmg": [1, 4]}
+    ]
+  },
+  "Wolf": {
+    "key": "Wolf",
+    "family": "Beast",
+    "tier": "NORMAL",
+    "level": 1,
+    "hp": 10,
+    "atk": 3,
+    "def": 11,
+    "dmg": [1, 5],
+    "ai": "lowest",
+    "emoji": "\ud83d\udc3a wolf",
+    "tags": ["forest", "pack"],
+    "moves": [
+      {"key": "bite", "name": "Bite", "type": "piercing", "dmg": [1, 5]}
+    ]
+  },
+  "Wolf Pack": {
+    "key": "Wolf Pack",
+    "family": "Beast",
+    "tier": "ELITE",
+    "level": 4,
+    "hp": 30,
+    "atk": 8,
+    "def": 16,
+    "dmg": [4, 10],
+    "ai": "random",
+    "emoji": "\ud83d\udc3a wolf pack",
+    "tags": ["forest", "pack"],
+    "moves": [
+      {"key": "pack_tactics", "name": "Pack Tactics", "type": "piercing", "dmg": [5, 12]}
+    ]
+  },
+  "Wraith": {
+    "key": "Wraith",
+    "family": "Undead",
+    "tier": "CHAMPION",
+    "level": 7,
+    "hp": 18,
+    "atk": 7,
+    "def": 16,
+    "dmg": [3, 9],
+    "ai": "random",
+    "emoji": "\ud83d\udc7b wraith",
+    "tags": ["ruin", "night"],
+    "moves": [
+      {"key": "life_drain", "name": "Life Drain", "type": "necrotic", "dmg": [3, 9]}
+    ]
+  }
+}

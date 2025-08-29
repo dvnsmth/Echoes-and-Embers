@@ -1,0 +1,36 @@
+// logic/encounters/builder.js
+import TABLES from "data/spawn-tables.json" with { type: "json" };
+// keep your RNG/budget logic in JS; just read TABLES[tableKey]
+
+
+// data/enemies.loader.js (optional helper)
+import RAW from "data/enemies.json" with { type: "json" };
+
+// Map string tiers to enum numbers *if* you still prefer numeric
+export const TIER = { NORMAL:1, ELITE:2, CHAMPION:3, BOSS:4, MYTHIC:5 };
+
+function clamp(n,min,max){ return Math.max(min, Math.min(max, Math.round(n))); }
+const FAMILY_WEIGHTS = { /* same as your file */ };
+
+function statTemplate({ level=1, tier=TIER.NORMAL, family="Humanoid" }){
+  const w = FAMILY_WEIGHTS[family] || FAMILY_WEIGHTS.Humanoid;
+  const tierBoost = (tier-1) * 1.5;
+  const lv = Math.max(1, level);
+  const base = 10;
+  const grow = (bias) => clamp(base + (lv * 2.0 + tierBoost) * bias, 10, 60);
+  return { STR: grow(w.STR), DEX: grow(w.DEX), CON: grow(w.CON), INT: grow(w.INT), WIS: grow(w.WIS), LCK: grow(w.LCK) };
+}
+
+function tierToNum(t){ return typeof t === "number" ? t : TIER[t] ?? TIER.NORMAL; }
+
+export const ENEMIES = Object.fromEntries(
+  Object.entries(RAW).map(([k, v]) => {
+    const tierNum = tierToNum(v.tier);
+    const stats = v.stats ?? statTemplate({ level: v.level, tier: tierNum, family: v.family });
+    return [k, { ...v, tier: tierNum, stats }];
+  })
+);
+
+export const ENEMY_LIST = Object.values(ENEMIES).sort((a,b)=>a.key.localeCompare(b.key));
+
+// you can keep your existing enemiesFor/tiersForPartyLevel here

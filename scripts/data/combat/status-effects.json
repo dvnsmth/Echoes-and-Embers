@@ -1,0 +1,331 @@
+{
+  "$schemaVersion": 1,
+  "defaults": {
+    "stacking": "additive",
+    "maxStacks": 1,
+    "durationType": "turns",
+    "carryOver": false,
+    "tickTiming": "turnEnd",
+    "hidden": false
+  },
+  "effects": {
+    "Burned": {
+      "id": "Burned",
+      "tags": ["elemental", "dot", "debuff"],
+      "icon": "🔥",
+      "stacking": "additive",
+      "maxStacks": 3,
+      "durationType": "turns",
+      "baseDuration": 3,
+      "tick": { "type": "fire", "amountPerStack": 2 },
+      "modifiers": { "damageTakenPct": 0 },
+      "combos": {
+        "onApplyIf": [
+          { "has": "Oily", "then": [{ "replace": "Oily" }, { "addStacks": { "id": "Burned", "stacks": 1 } }] }
+        ]
+      },
+      "cleanse": ["water", "cleanse", "temple"]
+    },
+
+    "Bleeding": {
+      "id": "Bleeding",
+      "tags": ["physical", "dot", "debuff"],
+      "icon": "🩸",
+      "stacking": "additive",
+      "maxStacks": 3,
+      "durationType": "turns",
+      "baseDuration": 3,
+      "tick": { "type": "physical", "amountPerStack": 2 },
+      "modifiers": { "healingReceivedPct": -10 },
+      "cleanse": ["bandage", "cleanse", "temple"]
+    },
+
+    "Poisoned": {
+      "id": "Poisoned",
+      "tags": ["toxic", "dot", "debuff", "carryover"],
+      "icon": "☠️",
+      "stacking": "additive",
+      "maxStacks": 3,
+      "durationType": "turns",
+      "baseDuration": 3,
+      "carryOver": true,
+      "tick": { "type": "poison", "amountPerStack": 2 },
+      "modifiers": { "resPct": -5 },
+      "cleanse": ["antidote", "cleanse", "temple"]
+    },
+
+    "Chilled": {
+      "id": "Chilled",
+      "tags": ["elemental", "debuff"],
+      "icon": "🥶",
+      "stacking": "replace",
+      "maxStacks": 1,
+      "durationType": "turns",
+      "baseDuration": 2,
+      "modifiers": { "atbRatePct": -20, "apRegenPct": -20 },
+      "combos": {
+        "onApplyIf": [
+          { "has": "Wet", "then": [{ "replace": "Wet" }, { "apply": { "id": "Frozen", "duration": 1 } }] }
+        ]
+      },
+      "cleanse": ["warmth", "cleanse", "temple"]
+    },
+
+    "Frozen": {
+      "id": "Frozen",
+      "tags": ["elemental", "control", "debuff"],
+      "icon": "🧊",
+      "stacking": "replace",
+      "maxStacks": 1,
+      "durationType": "turns",
+      "baseDuration": 1,
+      "modifiers": { "canAct": false, "defPct": -10 },
+      "cleanse": ["warmth", "cleanse", "temple"]
+    },
+
+    "Wet": {
+      "id": "Wet",
+      "tags": ["elemental", "setup", "debuff"],
+      "icon": "💧",
+      "stacking": "replace",
+      "maxStacks": 1,
+      "durationType": "turns",
+      "baseDuration": 2,
+      "modifiers": { "resLightningTakenPct": 20, "resFireTakenPct": -20 },
+      "cleanse": ["dry", "time"]
+    },
+
+    "Oily": {
+      "id": "Oily",
+      "tags": ["elemental", "setup", "debuff"],
+      "icon": "🛢️",
+      "stacking": "replace",
+      "maxStacks": 1,
+      "durationType": "turns",
+      "baseDuration": 3,
+      "modifiers": { "resFireTakenPct": 25 },
+      "combos": {
+        "onHitBy": [
+          { "type": "fire", "then": [{ "remove": "Oily" }, { "apply": { "id": "Burned", "stacks": 2, "duration": 3 } }] }
+        ]
+      },
+      "cleanse": ["water", "time"]
+    },
+
+    "Shocked": {
+      "id": "Shocked",
+      "tags": ["elemental", "debuff"],
+      "icon": "⚡",
+      "stacking": "replace",
+      "maxStacks": 1,
+      "durationType": "turns",
+      "baseDuration": 2,
+      "modifiers": { "dodgePct": -15 },
+      "combos": {
+        "onApplyIf": [
+          { "has": "Wet", "then": [{ "bonusDamagePct": 25 }] }
+        ]
+      },
+      "cleanse": ["ground", "cleanse", "temple"]
+    },
+
+    "Stunned": {
+      "id": "Stunned",
+      "tags": ["control", "debuff"],
+      "icon": "💫",
+      "stacking": "replace",
+      "maxStacks": 1,
+      "durationType": "turns",
+      "baseDuration": 1,
+      "modifiers": { "canAct": false, "dodgePct": -20 },
+      "cleanse": ["cleanse", "temple"]
+    },
+
+    "Rooted": {
+      "id": "Rooted",
+      "tags": ["control", "debuff"],
+      "icon": "🌿",
+      "stacking": "replace",
+      "maxStacks": 1,
+      "durationType": "turns",
+      "baseDuration": 2,
+      "modifiers": { "canMove": false },
+      "cleanse": ["cleanse", "temple"]
+    },
+
+    "Blind": {
+      "id": "Blind",
+      "tags": ["debuff"],
+      "icon": "🙈",
+      "stacking": "replace",
+      "maxStacks": 1,
+      "durationType": "turns",
+      "baseDuration": 2,
+      "modifiers": { "accuracyPct": -25, "critChancePct": -10 },
+      "cleanse": ["cleanse", "temple"]
+    },
+
+    "Silenced": {
+      "id": "Silenced",
+      "tags": ["control", "debuff"],
+      "icon": "🤐",
+      "stacking": "replace",
+      "maxStacks": 1,
+      "durationType": "turns",
+      "baseDuration": 2,
+      "modifiers": { "canCast": false },
+      "cleanse": ["cleanse", "temple"]
+    },
+
+    "Vulnerable": {
+      "id": "Vulnerable",
+      "tags": ["debuff"],
+      "icon": "🎯",
+      "stacking": "additive",
+      "maxStacks": 2,
+      "durationType": "turns",
+      "baseDuration": 2,
+      "modifiers": { "damageTakenPct": 15 }
+    },
+
+    "Weakened": {
+      "id": "Weakened",
+      "tags": ["debuff"],
+      "icon": "🪫",
+      "stacking": "replace",
+      "maxStacks": 1,
+      "durationType": "turns",
+      "baseDuration": 2,
+      "modifiers": { "damageDealtPct": -20 }
+    },
+
+    "Guarded": {
+      "id": "Guarded",
+      "tags": ["buff"],
+      "icon": "🛡️",
+      "stacking": "replace",
+      "maxStacks": 1,
+      "durationType": "turns",
+      "baseDuration": 2,
+      "modifiers": { "defPct": 20, "resPct": 10 }
+    },
+
+    "Fortified": {
+      "id": "Fortified",
+      "tags": ["buff"],
+      "icon": "🏰",
+      "stacking": "replace",
+      "maxStacks": 1,
+      "durationType": "turns",
+      "baseDuration": 3,
+      "modifiers": { "defPct": 30, "resPct": 15, "damageTakenPct": -10 }
+    },
+
+    "Haste": {
+      "id": "Haste",
+      "tags": ["buff"],
+      "icon": "💨",
+      "stacking": "replace",
+      "maxStacks": 1,
+      "durationType": "turns",
+      "baseDuration": 2,
+      "modifiers": { "atbRatePct": 25, "apRegenPct": 25 }
+    },
+
+    "Slow": {
+      "id": "Slow",
+      "tags": ["debuff"],
+      "icon": "🐌",
+      "stacking": "replace",
+      "maxStacks": 1,
+      "durationType": "turns",
+      "baseDuration": 2,
+      "modifiers": { "atbRatePct": -25, "apRegenPct": -25 }
+    },
+
+    "Regen": {
+      "id": "Regen",
+      "tags": ["heal", "buff"],
+      "icon": "➕",
+      "stacking": "additive",
+      "maxStacks": 2,
+      "durationType": "turns",
+      "baseDuration": 3,
+      "healTick": { "amountPerStack": 3, "timing": "turnEnd" }
+    },
+
+    "Thorns": {
+      "id": "Thorns",
+      "tags": ["buff"],
+      "icon": "🌵",
+      "stacking": "additive",
+      "maxStacks": 3,
+      "durationType": "turns",
+      "baseDuration": 3,
+      "retaliate": { "type": "physical", "amountPerStack": 2, "trigger": "onHitTaken" }
+    },
+
+    "Aegis": {
+      "id": "Aegis",
+      "tags": ["buff", "shield"],
+      "icon": "🛡️✨",
+      "stacking": "additive",
+      "maxStacks": 1,
+      "durationType": "turns",
+      "baseDuration": 2,
+      "shield": { "amount": 15 }
+    },
+
+    "Exhausted": {
+      "id": "Exhausted",
+      "tags": ["carryover", "debuff"],
+      "icon": "😮‍💨",
+      "stacking": "replace",
+      "maxStacks": 1,
+      "durationType": "turns",
+      "baseDuration": 3,
+      "carryOver": true,
+      "modifiers": { "apRegenPct": -30, "damageDealtPct": -10 },
+      "cleanse": ["rest_inn", "rest_camp", "temple"]
+    },
+
+    "Wounded": {
+      "id": "Wounded",
+      "tags": ["carryover", "debuff"],
+      "icon": "🩹",
+      "stacking": "additive",
+      "maxStacks": 3,
+      "durationType": "turns",
+      "baseDuration": 999,
+      "carryOver": true,
+      "modifiers": { "maxHpFlat": -5 },
+      "cleanse": ["temple", "rare_item"]
+    },
+
+    "Cursed": {
+      "id": "Cursed",
+      "tags": ["carryover", "debuff"],
+      "icon": "🕯️",
+      "stacking": "replace",
+      "maxStacks": 1,
+      "durationType": "turns",
+      "baseDuration": 999,
+      "carryOver": true,
+      "modifiers": { "luckPct": -25, "resPct": -10 },
+      "cleanse": ["temple"]
+    },
+
+    "Stealth": {
+      "id": "Stealth",
+      "tags": ["buff", "utility"],
+      "icon": "🫥",
+      "stacking": "replace",
+      "maxStacks": 1,
+      "durationType": "turns",
+      "baseDuration": 2,
+      "modifiers": { "targetable": false, "critChancePct": 10 },
+      "breakOn": ["attack", "damageTaken"]
+    }
+  }
+}
+

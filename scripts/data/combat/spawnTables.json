@@ -1,0 +1,46 @@
+{
+  "forest_road_t1": {
+    "key": "forest_road_t1",
+    "name": "Forest Road (T1 Recipe)",
+    "slots": [
+      { "role": "minion",  "count": [2, 4], "tiers": ["NORMAL"],   "families": ["Beast", "Goblinoid"], "biomes": ["forest", "road"] },
+      { "role": "pack",    "count": [0, 1], "names": ["Wolf Pack"], "tiers": ["ELITE"], "requireAtLeast": 0 },
+      { "role": "elite",   "count": [0, 1], "tiers": ["ELITE"],    "families": ["Goblinoid"], "names": ["Hobgoblin", "Goblin Captain"], "requireAtLeast": 0 }
+    ]
+  },
+  "caves_t2": {
+    "key": "caves_t2",
+    "name": "Caves (T2 Recipe)",
+    "slots": [
+      { "role": "minion",  "count": [2, 3], "tiers": ["NORMAL"],   "biomes": ["caves"], "families": ["Ooze", "Humanoid", "Beast"] },
+      { "role": "elite",   "count": [1, 2], "tiers": ["ELITE"],    "biomes": ["caves"], "families": ["Goblinoid", "Beast"] },
+      { "role": "captain", "count": [0, 1], "names": ["Giant Spider", "Mimic"], "tiers": ["CHAMPION"], "requireAtLeast": 0 }
+    ]
+  },
+  "crypt_undead_t2": {
+    "key": "crypt_undead_t2",
+    "name": "Crypt (Undead T2 Recipe)",
+    "slots": [
+      { "role": "minion",  "count": [2, 4], "tiers": ["NORMAL"],   "families": ["Undead"], "biomes": ["crypt", "ruin"], "names": ["Skeleton"] },
+      { "role": "elite",   "count": [0, 2], "tiers": ["CHAMPION"], "families": ["Undead"], "names": ["Specter", "Wraith"] },
+      { "role": "captain", "count": [0, 1], "tiers": ["ELITE"],    "families": ["Undead"], "names": ["Banshee"], "requireAtLeast": 0 }
+    ]
+  },
+  "tundra_elites_t3": {
+    "key": "tundra_elites_t3",
+    "name": "Tundra Patrol (T3 Recipe)",
+    "slots": [
+      { "role": "minion",  "count": [1, 2], "tiers": ["ELITE"],    "families": ["Beast", "Construct"], "biomes": ["tundra"] },
+      { "role": "elite",   "count": [1, 2], "tiers": ["CHAMPION"], "families": ["Elemental", "Beast"], "names": ["Shambling Mound", "Treant", "Snow Golem", "Ice Elemental"] },
+      { "role": "captain", "count": [0, 1], "tiers": ["CHAMPION"], "families": ["Dragon"], "names": ["Ice Drake"], "requireAtLeast": 0 }
+    ]
+  },
+  "boss_lair_dragon": {
+    "key": "boss_lair_dragon",
+    "name": "Boss Lair: Dragon",
+    "slots": [
+      { "role": "boss",    "count": [1, 1], "names": ["White Dragon", "Black Dragon"], "tiers": ["BOSS"] },
+      { "role": "elite",   "count": [0, 2], "tiers": ["CHAMPION"], "families": ["Beast", "Elemental", "Construct"], "biomes": ["tundra", "swamp", "sky"] }
+    ]
+  }
+}
